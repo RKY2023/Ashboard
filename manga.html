@@ -67,18 +67,44 @@
             function csv2JSon(data){
                 var jsonData = [];
                     var headers = [];
-                    var rows = data.split("\r\n");               
+                    var rows = data.split("\r\n");
+                                   
                     for (var i = 0; i < rows.length; i++) {
                         var cells = rows[i].split(",");
                         var rowData = {};
+                        let mergedStr = '';
+                        let headeridx = 0;
                         for(var j=0;j<cells.length;j++){
                             if(i==0){
                                 var headerName = cells[j].trim();
                                 headers.push(headerName);
                             }else{
-                                var key = headers[j];
+                                var key = headers[headeridx];
+                                if(key == ""){
+                                    headeridx++;
+                                    continue;
+                                }
+                                    
                                 if(key){
-                                    rowData[key] = cells[j].trim();
+                                    // start - if contain double quotation treat as single string
+                                    
+                                    if(cells[j].indexOf('\"') != 0 && mergedStr ==''){
+                                        rowData[key] = cells[j].trim();
+                                        headeridx++;
+                                    }
+                                    else if(cells[j].indexOf('\"') == 0){
+                                        mergedStr += cells[j].trim();
+                                    }
+                                    else if(cells[j].lastIndexOf('\"') > 0){
+                                        mergedStr += cells[j].trim();
+                                        rowData[key] = mergedStr;
+                                        mergedStr = '';
+                                        headeridx++;                                          
+                                    }
+                                    else{
+                                        mergedStr += cells[j].trim();
+                                    }
+                                    // end                                    
                                 }
                             }
                         }
@@ -86,7 +112,7 @@
                         if(i!=0){
                             jsonData.push(rowData);
                         }
-                        // console.log(jsonData);
+                        console.log(jsonData);
                     }
                     
                     //displaying the json result in string format
@@ -106,9 +132,9 @@
                                 div +='<img class="card-img-top manga-banner" alt="No Image" src="'+imgSrc+'"/>';
                                 div += '<div class="card-body p-0">';
                                     div +='<div class="card-title p-3 mb-0 bg-dark text-white manga-name">'+element.name+'</div>';
-                                    div +='<div class="card-text p-3 bg-success text-white manga-chapter">'+element.chapter+'</div>';
+                                    div +='<div class="card-text p-3 bg-success text-white manga-chapter">Chapter '+element.chapter+'</div>';
                                     div +='<div class="card-text p-3 bg-info text-dark manga-rating">'+element.rating+'</div>';
-                                    div +='<div class="card-text p-3 mb-2 bg-warning text-dark manga-url">'+element.url+'</div>';
+                                    div +='<div class="card-text p-3 mb-2 bg-warning text-dark manga-url">'+element.host_url+'/'+element.name_url+'</div>';
                                     // div +='<a class="btn btn-primary manga-rating" href="'+element.url+'"">Link</a>';                               
                                 div +='</div>';
                             div +='</div>';
