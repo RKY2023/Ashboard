@@ -15,3 +15,4 @@ npm start
 npx create-next-app ashboard
 npm run dev
 ### To deploy in Vercel
+create insta photo to suggest list here  of platform related infos or others
