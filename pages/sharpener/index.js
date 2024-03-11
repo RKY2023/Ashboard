@@ -13,7 +13,6 @@ const sharpener = (props) => {
         Review resume link [08:15]
         https://meet.google.com/gfm-wwqf-jwz
         <br/>
-
         </>
     );
 };

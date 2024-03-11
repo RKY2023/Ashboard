@@ -20,6 +20,7 @@ export default function Main() {
           Welcome User
         </h1>
         <Link href='/career/projects'>Go to Projects</Link>
+        <Link href='/sharpener'>sharpener</Link>
         Welcome
       </main>
     </>
