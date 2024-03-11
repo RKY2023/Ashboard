@@ -1,7 +1,7 @@
 export default function projectPage () {
     return (
         <>
-                <h1 className='m-2 text-center'>
+        <h1 className='m-2 text-center'>
             Projects here
         </h1>
         <div className='m-5'>
