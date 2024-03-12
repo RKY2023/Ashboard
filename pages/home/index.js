@@ -1,5 +1,6 @@
 // import React from "react";
 import Link from 'next/link';
+import HomeBody from './homebody';
 function home () {
     return (
     <>
@@ -11,6 +12,8 @@ function home () {
                 </Link>
             </li>
         </ul>
+        {/* <Header /> */}
+        <HomeBody />
     </>
     
 
