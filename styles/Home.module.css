@@ -1,3 +1,13 @@
+.body_gradiant {
+  color: rgb(0, 0, 0);
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(54, 59, 60)
+    )
+    rgb(164, 169, 170);
+}
+
 .main {
   display: flex;
   flex-direction: column;

@@ -17,12 +17,12 @@ export default function Main() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Header />
-      <main className={`${styles.main} ${inter.className}`}>
+      <main className={`${styles.main} ${inter.className} ${styles.body_gradiant}`}>
         
         <h1>
           Welcome User
         </h1>
-        <Link href='/career/projects'>Go to Projects</Link>
+        {/* <Link href='/career/projects'>Go to Projects</Link> */}
         <Link href='/sharpener'>sharpener</Link>
         
       </main>
