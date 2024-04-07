@@ -20,7 +20,7 @@ export default function Main() {
       <main className={`${styles.main} ${inter.className} ${styles.body_gradiant}`}>
         
         <h1>
-          Welcome User
+          Welcome
         </h1>
         {/* <Link href='/career/projects'>Go to Projects</Link> */}
         <Link href='/sharpener'>sharpener</Link>
