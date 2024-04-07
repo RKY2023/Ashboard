@@ -124,7 +124,6 @@ const DUMMY_COLOR_Blue = [
         wavelength: 0,
     },
 ]
-
 const DUMMY_COLOR_Green = [
     {
         hexCode: '#00FFFF',
@@ -177,7 +176,6 @@ const DUMMY_COLOR_Green = [
         wavelength: 0,
     },
 ]
-
 const DUMMY_COLOR_Red = [
     {
         hexCode: '#FF00FF',
@@ -233,7 +231,7 @@ const DUMMY_COLOR_Red = [
 
 const colorsPage = (props) => {
     const colorBoxContent = DUMMY_COLOR.map((color) => (
-        <Col>
+        <Col key={color.hexCode}>
             <Card>
                 <Card.Header>{color.name}</Card.Header>
                 <Card.Body>
@@ -245,7 +243,7 @@ const colorsPage = (props) => {
     ));
 
     const colorBoxBlueContent = DUMMY_COLOR_Blue.map((color) => (
-        <Col>
+        <Col key={color.hexCode}>
             <Card>
                 <Card.Header>{color.name}</Card.Header>
                 <Card.Body>
@@ -257,7 +255,7 @@ const colorsPage = (props) => {
     ));
 
     const colorBoxGreenContent = DUMMY_COLOR_Green.map((color) => (
-        <Col>
+        <Col key={color.hexCode}>
             <Card>
                 <Card.Header>{color.name}</Card.Header>
                 <Card.Body>
@@ -269,7 +267,7 @@ const colorsPage = (props) => {
     ));
 
     const colorBoxRedContent = DUMMY_COLOR_Red.map((color) => (
-        <Col>
+        <Col key={color.hexCode}>
             <Card>
                 <Card.Header>{color.name}</Card.Header>
                 <Card.Body>
