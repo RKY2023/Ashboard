@@ -16,6 +16,7 @@ npx create-next-app ashboard <br/>
 npm run dev
 ### Vercel Deploy
 npm run build
+git push origin main
 
 
 create insta photo to suggest list here  of platform related infos or others
