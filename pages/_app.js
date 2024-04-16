@@ -1,14 +1,13 @@
 import "@/styles/globals.css";
 import "../node_modules/react-bootstrap/dist/react-bootstrap";
 import "../node_modules/bootstrap/dist/css/bootstrap.css";
-import { Provider } from 'react-redux';
-import store from './store/index';
+import { Providers } from "./provider";
 
 const App = ({ Component, pageProps }) => {
   return (
-    <Provider store={store}>
+    <Providers>
       <Component {...pageProps} />
-    </Provider>
+    </Providers>
   );
 }
 export default App;

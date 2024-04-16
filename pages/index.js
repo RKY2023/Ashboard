@@ -4,7 +4,7 @@ import styles from "@/styles/Home.module.css";
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from "react";
 import Header from "@/components/UI/Header/Header";
-import { dashboardActions } from "@/pages/store/dashboardReducer";
+import { dashboardActions } from "@/store/dashboardReducer";
 
 const inter = Inter({ subsets: ["latin"] });
 

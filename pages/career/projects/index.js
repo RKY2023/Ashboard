@@ -1,5 +1,5 @@
 import Header from "@/components/UI/Header/Header";
-import { dashboardActions } from "@/pages/store/dashboardReducer";
+import { dashboardActions } from "@/store/dashboardReducer";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
