@@ -1,10 +1,10 @@
 import Head from "next/head";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
-import { useDispatch, useSelector } from 'react-redux';
+// import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from "react";
 import Header from "@/components/UI/Header/Header";
-import { dashboardActions } from "@/store/dashboardReducer";
+// import { dashboardActions } from "@/store/dashboardReducer";
 
 const inter = Inter({ subsets: ["latin"] });
 
