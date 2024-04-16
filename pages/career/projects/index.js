@@ -1,8 +1,8 @@
 import Header from "@/components/UI/Header/Header";
-import { dashboardActions } from "@/store/dashboardReducer";
+// import { dashboardActions } from "@/store/dashboardReducer";
 import Link from "next/link";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 import styles from "@/styles/Home.module.css";
 import Accordion from 'react-bootstrap/Accordion';
 

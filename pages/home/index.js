@@ -1,7 +1,7 @@
 // import React from "react";
 import Link from 'next/link';
 import HomeBody from './homebody';
-import Moon from "./moon";
+import Moon from './moon';
 
 function home () {
     return (

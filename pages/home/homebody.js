@@ -1,5 +1,4 @@
 import { Table } from "react-bootstrap";
-import Moon from "./moon";
 
 const HomeBody = () => {
     return (
@@ -20,7 +19,7 @@ const HomeBody = () => {
                 </tbody>
             </Table>
         {/* <Finance /> */}
-        <Moon />
+        
         </div>
         </>
     );
