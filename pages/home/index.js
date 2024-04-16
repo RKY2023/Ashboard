@@ -4,15 +4,7 @@ import HomeBody from './homebody';
 function home () {
     return (
     <>
-        <h1>The News page</h1>
-        <ul>
-            <li>
-                <Link href='/news/news-next'>
-                    NextJS News Link
-                </Link>
-            </li>
-        </ul>
-        {/* <Header /> */}
+        <h1>Home page</h1>
         <HomeBody />
     </>
     

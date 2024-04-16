@@ -1,13 +1,20 @@
 import Head from "next/head";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
-import Link from "next/link";
-import { Container } from "react-bootstrap";
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect } from "react";
 import Header from "@/components/UI/Header/Header";
+import { dashboardActions } from "@/store/dashboardReducer";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export default function Main() {
+const Main = () => {
+  const dispatch = useDispatch();
+  
+  useEffect(() => {
+    dispatch(dashboardActions.setTheme());
+  },[]);
+
   return (
     <>
       <Head>
@@ -23,9 +30,11 @@ export default function Main() {
           Welcome
         </h1>
         {/* <Link href='/career/projects'>Go to Projects</Link> */}
-        <Link href='/sharpener'>sharpener</Link>
+        
         
       </main>
     </>
-  );
+    );
 }
+
+export default Main;
