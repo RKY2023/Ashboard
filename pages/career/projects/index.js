@@ -42,7 +42,7 @@ export default function projectPage () {
     <Accordion.Item eventKey={proj.id} Key={proj.id}>
       <Accordion.Header>{proj.name}</Accordion.Header>
       <Accordion.Body>
-        <Link href={proj.url}></Link>
+        <Link href={proj.url}>{proj.url}</Link>
       </Accordion.Body>
     </Accordion.Item>
     );
