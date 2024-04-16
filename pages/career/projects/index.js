@@ -35,7 +35,7 @@ const INITIAL_PROJECTS = [
 ]
 
 export default function projectPage () {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   const content = INITIAL_PROJECTS.map(proj => {
     return (
@@ -49,8 +49,9 @@ export default function projectPage () {
   })
 
   useEffect(() => {
-    dispatch(dashboardActions.setTheme('dark'));
-    dispatch(dashboardActions.toggleTheme());
+    const bodyElement = document.getElementsByTagName('body')[0];
+    bodyElement.setAttribute('data-bs-theme','dark');
+    localStorage.setItem('theme','dark');        
   },[]);
 
   return (

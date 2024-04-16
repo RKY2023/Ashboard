@@ -9,10 +9,10 @@ import { dashboardActions } from "@/store/dashboardReducer";
 const inter = Inter({ subsets: ["latin"] });
 
 const Main = () => {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   
   useEffect(() => {
-    dispatch(dashboardActions.setTheme());
+    // dispatch(dashboardActions.setTheme());
   },[]);
 
   return (
