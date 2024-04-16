@@ -1,5 +1,5 @@
 import Header from "@/components/UI/Header/Header";
-import { dashboardActions } from "@/store/dashboardReducer";
+import { dashboardActions } from "@/pages/store/dashboardReducer";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -39,14 +39,12 @@ export default function projectPage () {
 
   const content = INITIAL_PROJECTS.map(proj => {
     return (
-    <>
-    <Accordion.Item eventKey={proj.id}>
+    <Accordion.Item eventKey={proj.id} Key={proj.id}>
       <Accordion.Header>{proj.name}</Accordion.Header>
       <Accordion.Body>
         <Link href={proj.url}></Link>
       </Accordion.Body>
     </Accordion.Item>
-    </>
     );
   })
 
