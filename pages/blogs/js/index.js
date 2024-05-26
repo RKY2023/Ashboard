@@ -1,4 +1,5 @@
 import React from 'react';
+import HtmlEntities from './htmlEntities';
 
 const AboutJS = (props) => {
     return (
@@ -30,7 +31,7 @@ const AboutJS = (props) => {
                             <td>syntax error</td>
                         </tr>
                     </tbody>
-                    <tr></tr>
+                    
                 </table>
 
             </li>
@@ -79,6 +80,7 @@ const AboutJS = (props) => {
             </ul>
         </li>
         </ul>
+        <HtmlEntities/>
         </>
     );
 };

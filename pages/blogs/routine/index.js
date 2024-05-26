@@ -134,7 +134,7 @@ const Routine = (props) => {
     };
     
     const tableContent = discipline.map((el) => (
-        <tr>
+        <tr key={el.time}>
             <td>{el.time}</td>
             {actionMap(el.action)}
         </tr>

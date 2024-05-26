@@ -168,6 +168,8 @@ const Grocery = () =>{
                 </tbody>
             </Table>
         </Container>
+        {/* build add grocery  */}
+        {/* build recommended grocery */}
         </>
     );
 }

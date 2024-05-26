@@ -1,4 +1,7 @@
 import { Container, Nav, Navbar } from "react-bootstrap";
+import Link from "next/link";
+import classes from './Header.module.css';
+import ThemeButton from "./ThemeButton";
 
 const Header = (props) => {
     return (
@@ -8,13 +11,32 @@ const Header = (props) => {
                 <Navbar.Brand>Ashboard</Navbar.Brand>
                 <Nav>
                     {/* <Nav.Link href='/home'>Home</Nav.Link> */}
-                    <Nav.Link href='/career/projects'>Projects</Nav.Link>
-                    {/* <Nav.Link href='/anime'>Anime</Nav.Link> */}
-                    {/* <Nav.Link href='/routine'>Routine</Nav.Link> */}
-                    {/* <Nav.Link href='/colors'>Colors</Nav.Link> */}
-                    {/* <Nav.Link href='/govt'>Govt</Nav.Link> */}
-                    {/* <Nav.Link href='/login'>Login</Nav.Link> */}
-                    {/* <Nav.Link href='/profile'>Profile</Nav.Link> */}
+                    {/* <Link href='/home' className="nav-link">
+                        Home
+                    </Link> */}
+                    <Link href='/career/projects' className="nav-link">
+                        Projects
+                    </Link>
+                    <Link href='/blogs/anime' className="nav-link">
+                        Anime
+                    </Link>
+                    <Link href='/blogs/routine' className="nav-link">
+                        Routine
+                    </Link>
+                    <Link href='/blogs/colors' className="nav-link">
+                        Colors
+                    </Link>
+                    <Link href='/blogs/govt' className="nav-link">
+                        Govt
+                    </Link>
+                    <Link href='/login' className="nav-link">
+                        Login
+                    </Link>
+                    <ThemeButton />
+                    {/* <Link href='/profile' className="nav-link">
+                        Profile
+                    </Link>                   */}
+                    
                 </Nav>
             </Container>
         </Navbar>

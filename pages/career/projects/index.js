@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import styles from "@/styles/Home.module.css";
 import Accordion from 'react-bootstrap/Accordion';
 
-const INITIAL_PROJECTS = [
+const WEB_PROJECTS = [
   {
     id: 0,
     name: 'Ashboard',
@@ -34,12 +34,40 @@ const INITIAL_PROJECTS = [
   }
 ]
 
+const PY_PROJECTS = [
+  {
+    id: 0,
+    name: 'Auto Anime Downloader',
+    url: 'https://github.com/RKY2023/AutoAnimeDownload',
+  },
+  {
+    id: 1,
+    name: 'Manga Downloader',
+    url: 'https://expensetracker-7505d.web.app/',
+  },
+  {
+    id: 2,
+    name: 'Bank Account statement Pdf to CSV',
+    url: 'https://mailboxx-72dc0.web.app/',
+  }
+]
+
 export default function projectPage () {
   // const dispatch = useDispatch();
 
-  const content = INITIAL_PROJECTS.map(proj => {
+  const content = WEB_PROJECTS.map(proj => {
     return (
-    <Accordion.Item eventKey={proj.id} Key={proj.id}>
+    <Accordion.Item eventKey={proj.id} key={proj.id}>
+      <Accordion.Header>{proj.name}</Accordion.Header>
+      <Accordion.Body>
+        <Link href={proj.url}>{proj.url}</Link>
+      </Accordion.Body>
+    </Accordion.Item>
+    );
+  })
+  const content2 = PY_PROJECTS.map(proj => {
+    return (
+    <Accordion.Item eventKey={proj.id} key={proj.id}>
       <Accordion.Header>{proj.name}</Accordion.Header>
       <Accordion.Body>
         <Link href={proj.url}>{proj.url}</Link>
@@ -58,13 +86,22 @@ export default function projectPage () {
 <>
 <Header />
 <div className={`${styles.main} ${styles.body_gradiant}`}>
-  {/* <h1 className='m-2 text-center'>
-      Projects here
-  </h1> */}    
-
-  <Accordion defaultActiveKey="0">
-    {content}
-  </Accordion>
+  <div className="col">
+    <h1 className='m-2 text-center'>
+        React Projects
+    </h1>
+    <Accordion defaultActiveKey="0">
+      {content}
+    </Accordion>
+  </div>
+  <div className="col">
+    <h1 className='m-2 text-center'>
+        Python Projects
+    </h1>
+    <Accordion defaultActiveKey="0">
+      {content2}
+    </Accordion>
+  </div>
 </div>
 </>
     );
