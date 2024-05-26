@@ -1,4 +1,5 @@
-export default function ()  {
+import { Table } from "react-bootstrap";
+const Websites = () => {
   return (
     <>
       <div className="m-5">
@@ -20,3 +21,4 @@ export default function ()  {
     </>
   );
 };
+export default Websites;
