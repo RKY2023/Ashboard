@@ -1,5 +1,5 @@
 import React from 'react';
-import HtmlEntities from './htmlEntities';
+import HtmlEntities from './HtmlEntities';
 
 const AboutJS = (props) => {
     return (

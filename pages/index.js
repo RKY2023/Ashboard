@@ -4,6 +4,7 @@ import styles from "@/styles/Home.module.css";
 // import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from "react";
 import Header from "@/components/UI/Header/Header";
+import Portfolio from "./profile/portfolio";
 // import { dashboardActions } from "@/store/dashboardReducer";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -31,8 +32,9 @@ const Main = () => {
       <main className={`${styles.main} ${inter.className} ${styles.body_gradiant}`}>
         <div>
         <h1  className="text-center">
-          Welcome Rky
+          Raj Kumar Yadav
         </h1>
+        <Portfolio />
         </div>
         {/* <Link href='/career/projects'>Go to Projects</Link> */}
         
