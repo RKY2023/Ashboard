@@ -6,6 +6,19 @@ import { useEffect } from "react";
 import styles from "@/styles/Home.module.css";
 import Accordion from 'react-bootstrap/Accordion';
 
+const FULLSTACK_PROJECTS = [
+  {
+    id: 0,
+    name: 'Group Chat App',
+    url: 'http://13.53.45.119/',
+  },
+  {
+    id: 1,
+    name: 'Expense tracker',
+    url: 'http://16.170.117.21/',
+  }
+]
+
 const WEB_PROJECTS = [
   {
     id: 0,
@@ -75,6 +88,16 @@ export default function projectPage () {
     </Accordion.Item>
     );
   })
+  const content3 = FULLSTACK_PROJECTS.map(proj => {
+    return (
+    <Accordion.Item eventKey={proj.id} key={proj.id}>
+      <Accordion.Header>{proj.name}</Accordion.Header>
+      <Accordion.Body>
+        <Link href={proj.url}>{proj.url}</Link>
+      </Accordion.Body>
+    </Accordion.Item>
+    );
+  })
 
   useEffect(() => {
     const bodyElement = document.getElementsByTagName('body')[0];
@@ -85,7 +108,15 @@ export default function projectPage () {
   return (
 <>
 <Header />
-<div className={`${styles.main} ${styles.body_gradiant}`}>
+<div className={`flex flex-col p-10 ${styles.body_gradiant}`}>
+  <div className="col">
+    <h1 className='m-2 text-center'>
+        Fullstack Projects
+    </h1>
+    <Accordion defaultActiveKey="0">
+      {content3}
+    </Accordion>
+  </div>
   <div className="col">
     <h1 className='m-2 text-center'>
         React Projects
