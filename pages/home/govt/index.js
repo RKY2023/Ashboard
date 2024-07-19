@@ -1,9 +1,17 @@
 import Accordion from 'react-bootstrap/Accordion';
 import Govt_main from './govt_main';
+import DataList from '@/components/DataList';
+
+const INIT_DATA = [
+    {
+        id: 1,
+        name: ''
+    }
+]
 const Govt = () => {
     return (
 <>
-    <Accordion defaultActiveKey="0">
+    {/* <Accordion defaultActiveKey="0">
     <Accordion.Item eventKey="0">
     <Accordion.Header>Manifesto 2019</Accordion.Header>
     <Accordion.Body>
@@ -16,7 +24,8 @@ const Govt = () => {
         No of seats per state  with Graph Analysis
     </Accordion.Body>
     </Accordion.Item>
-    </Accordion>
+    </Accordion> */}
+    <DataList />
     <Govt_main/>
 </>
     );

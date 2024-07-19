@@ -5,6 +5,7 @@ import styles from "@/styles/Home.module.css";
 import { useEffect } from "react";
 import Header from "@/components/UI/Header/Header";
 import Portfolio from "./profile/portfolio";
+import Dashboard from "./dashboard";
 // import { dashboardActions } from "@/store/dashboardReducer";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -31,10 +32,8 @@ const Main = () => {
       <Header />
       <main className={`${styles.main} ${inter.className} ${styles.body_gradiant}`}>
         <div>
-        <h1  className="text-center">
-          Raj Kumar Yadav
-        </h1>
-        <Portfolio />
+         {/* import dashboard  */}
+         <Dashboard />
         </div>
         {/* <Link href='/career/projects'>Go to Projects</Link> */}
         
