@@ -2,7 +2,7 @@ import Head from "next/head";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 // import { useDispatch, useSelector } from 'react-redux';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Header from "@/components/UI/Header/Header";
 import Portfolio from "./profile/portfolio";
 import Dashboard from "./dashboard";
@@ -11,6 +11,7 @@ import Dashboard from "./dashboard";
 const inter = Inter({ subsets: ["latin"] });
 
 const Main = () => {
+  const [isLoggedIn, SetIsLoggIn] = useState(false);
   // const dispatch = useDispatch();
   
   useEffect(() => {
@@ -29,7 +30,7 @@ const Main = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Header />
+      <Header isLoggedIn={isLoggedIn}/>
       <main className={`${styles.main} ${inter.className} ${styles.body_gradiant}`}>
         <div>
          {/* import dashboard  */}

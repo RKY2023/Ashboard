@@ -1,11 +1,11 @@
-import AnimeData from "./animeData";
-import AnimeForm from "./animeForm";
+const INITIAL_AI = [
+    
+];
 
 const Anime = () => {
     return (
         <>
-        <AnimeForm />
-        <AnimeData />
+        AI
         </>
     );
 };

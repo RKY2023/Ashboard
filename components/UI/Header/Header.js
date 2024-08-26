@@ -29,9 +29,16 @@ const Header = (props) => {
                     <Link href='/blogs/govt' className="nav-link">
                         Govt
                     </Link>
+                    {props.isLoggedIn &&
+                    <Link href='/login' className="nav-link">
+                        {props.userData.name || 'user'} 
+                    </Link>
+                    }
+                    {!props.isLoggedIn &&
                     <Link href='/login' className="nav-link">
                         Login
                     </Link>
+                    }
                     <ThemeButton />
                     {/* <Link href='/profile' className="nav-link">
                         Profile
