@@ -14,21 +14,10 @@ const Header = (props) => {
                     {/* <Link href='/home' className="nav-link">
                         Home
                     </Link> */}
-                    <Link href='/career/projects' className="nav-link">
-                        Projects
-                    </Link>
-                    <Link href='/blogs/anime' className="nav-link">
-                        Anime
-                    </Link>
-                    <Link href='/blogs/routine' className="nav-link">
-                        Routine
-                    </Link>
-                    <Link href='/blogs/colors' className="nav-link">
-                        Colors
-                    </Link>
-                    <Link href='/blogs/govt' className="nav-link">
+                    
+                    {/* <Link href='/blogs/govt' className="nav-link">
                         Govt
-                    </Link>
+                    </Link> */}
                     {props.isLoggedIn &&
                     <Link href='/login' className="nav-link">
                         {props.userData.name || 'user'} 

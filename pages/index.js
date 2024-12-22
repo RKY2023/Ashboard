@@ -7,7 +7,6 @@ import Header from "@/components/UI/Header/Header";
 // import Portfolio from "./profile/portfolio";
 import Dashboard from "./dashboard";
 import Particle from "@/components/UI/Section/particle";
-import Weather from "./weather";
 // import { dashboardActions } from "@/store/dashboardReducer";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -38,10 +37,7 @@ const Main = () => {
         <div>
          {/* import dashboard  */}
          <Dashboard />
-         <Weather/>
-        </div>
-        {/* <Link href='/career/projects'>Go to Projects</Link> */}
-        
+        </div>     
         
       </main>
     </>

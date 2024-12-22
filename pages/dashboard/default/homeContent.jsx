@@ -3,24 +3,16 @@ import classes from './homeContent.module.css';
 
 const INITIAL_REASON = [
   {
-    title: "Singlular Platform",
-    summary: "This"
+    title: "Energy Consumption",
+    summary: "Electricity meter & devices usage"
   },
   {
-    title: "Check Energy Consumption",
-    summary: "This"
-  },
-  // {
-  //   title: "Track Expenses",
-  //   summary: "This"
-  // },
-  {
-    title: "Discover way to optimize waste it",
-    summary: "RRR (Reduce, Reuse, Recycle)"
+    title: "Cooking Emission",
+    summary: "Natural gas consumption & Litchen Ventillation"
   },
   {
-    title: "Singlular Platform",
-    summary: "This"
+    title: "Vehicle Emission",
+    summary: "Distance travelled via petrol"
   },
 ]
 
