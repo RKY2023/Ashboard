@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Container, Table } from 'react-bootstrap';
-import SwitchExample from "../UI/Layout/toggle";
+import SwitchExample from "../../components/UI/Layout/toggle";
 // import { useDispatch, useSelector } from 'react-redux';
 // import { dashboardActions } from "@/store/dashboardReducer";
 

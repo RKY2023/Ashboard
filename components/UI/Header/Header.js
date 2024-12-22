@@ -39,7 +39,7 @@ const Header = (props) => {
                         Login
                     </Link>
                     }
-                    <ThemeButton />
+                    {/* <ThemeButton /> */}
                     {/* <Link href='/profile' className="nav-link">
                         Profile
                     </Link>                   */}

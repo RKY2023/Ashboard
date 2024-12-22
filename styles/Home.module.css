@@ -5,16 +5,16 @@
       transparent,
       rgb(54, 59, 60)
     )
-    rgb(164, 169, 170);
+    rgb(38, 39, 39);
 }
 
 .main {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  gap: 1rem;
+  /* gap: 1rem; */
   align-items: center;
-  padding: 1rem;
+  /* padding: 1rem; */
   min-height: 94vh;
 }
 

@@ -4,8 +4,10 @@ import styles from "@/styles/Home.module.css";
 // import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from "react";
 import Header from "@/components/UI/Header/Header";
-import Portfolio from "./profile/portfolio";
+// import Portfolio from "./profile/portfolio";
 import Dashboard from "./dashboard";
+import Particle from "@/components/UI/Section/particle";
+import Weather from "./weather";
 // import { dashboardActions } from "@/store/dashboardReducer";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -31,10 +33,12 @@ const Main = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Header isLoggedIn={isLoggedIn}/>
-      <main className={`${styles.main} ${inter.className} ${styles.body_gradiant}`}>
+      <Particle className='' />
+      <main className={` ${inter.className} ${styles.body_gradiant}`}>
         <div>
          {/* import dashboard  */}
          <Dashboard />
+         <Weather/>
         </div>
         {/* <Link href='/career/projects'>Go to Projects</Link> */}
         

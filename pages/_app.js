@@ -6,8 +6,10 @@ import "../node_modules/bootstrap/dist/css/bootstrap.css";
 const App = ({ Component, pageProps }) => {
   return (
     // <Providers>
+    <>
       <Component {...pageProps} />
-    // </Providers>
+    {/* </Providers> */}
+    </>
   );
 }
 export default App;

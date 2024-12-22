@@ -1,0 +1,121 @@
+[
+  {
+    "id": 1,
+    "prefix": "e",
+    "meaning": "",
+    "language": "",
+    "words": ""
+  },
+  {
+    "id": 2,
+    "prefix": "out",
+    "meaning": "",
+    "language": "",
+    "words": ""
+  },
+  {
+    "id": 3,
+    "prefix": "ex",
+    "meaning": "",
+    "language": "",
+    "words": ""
+  },
+  {
+    "id": 4,
+    "prefix": "away",
+    "meaning": "",
+    "language": "",
+    "words": ""
+  },
+  {
+    "id": 5,
+    "prefix": "per",
+    "meaning": "through, thoroughly, utterly, very",
+    "language": "",
+    "words": "pervert"
+  },
+  {
+    "id": 6,
+    "prefix": "de",
+    "meaning": "privation, removal, separation",
+    "language": "latin",
+    "words": "decide"
+  },
+  {
+    "id": 7,
+    "prefix": "di",
+    "meaning": "",
+    "language": "latin",
+    "words": ""
+  },
+  {
+    "id": 8,
+    "prefix": "dis",
+    "meaning": "apart, separate, not, opposite of",
+    "language": "latin",
+    "words": "discord"
+  },
+  {
+    "id": 9,
+    "prefix": "un",
+    "meaning": "",
+    "language": "latin",
+    "words": " unsigned"
+  },
+  {
+    "id": 10,
+    "prefix": "non",
+    "meaning": "",
+    "language": "latin",
+    "words": "non-decreasing"
+  },
+  {
+    "id": 11,
+    "prefix": "re",
+    "meaning": "try again to complete",
+    "language": "latin",
+    "words": "revise"
+  },
+  {
+    "id": 12,
+    "prefix": "mne",
+    "meaning": "single, unique",
+    "language": "latin",
+    "words": " mnemonic"
+  },
+  {
+    "id": 13,
+    "prefix": "en",
+    "meaning": "try again to complete",
+    "language": "latin",
+    "words": "enchant"
+  },
+  {
+    "id": 14,
+    "prefix": "ante",
+    "meaning": "before, unknown, opposite, adversary",
+    "language": "latin",
+    "words": "antecedent"
+  },
+  {
+    "id": 15,
+    "prefix": "ce",
+    "meaning": "try again to complete",
+    "language": "latin",
+    "words": " antecedent"
+  },
+  {
+    "id": 16,
+    "prefix": "re",
+    "meaning": "try again to complete",
+    "language": "latin",
+    "words": "non-decreasing"
+  },
+  {
+    "id": 17,
+    "prefix": "masse",
+    "meaning": "mass",
+    "language": "",
+    "words": " massacre "
+  }
+]
