@@ -1,0 +1,136 @@
+.carousel3D {
+  position: relative;
+  perspective: 1000px;
+}
+
+.carousel-body {
+    background-color: #8c52ff;
+    height: 600px;
+    margin: 0;
+    display: grid;
+    grid-template-rows: 500px 100px;
+    grid-template-columns: 1fr 30px 30px 30px 30px 30px 1fr;
+    align-items: center;
+    justify-items: center;
+    font-family: 'Poppins', sans-serif;
+
+}
+
+.item img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-top: 15px;
+
+}
+
+.carousel-title {
+  color: #8c52ff;
+  margin-bottom: 2px;
+}
+
+.carousel-description {
+  font-style: italic;
+  color: #8c52ff;
+  margin-top: 2px;
+}
+
+main#caraousel3D {
+  grid-row: 1 / 2;
+  grid-column: 1 / 8;
+  width: 100vw;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  perspective: 600px;
+  --items: 5;
+  --middle: 3;
+  --position: 1;
+  pointer-events: none;
+
+}
+
+div.item {
+  text-align: center;
+  padding: 20px;
+  border: 3px solid #8c52ff;
+  border-radius: 20px;
+  background-color: #fff;
+  position: absolute;
+  width: 300px;
+  height: 250px;
+  background-color: white;
+  /* --r: calc(var(--position) * 360deg / var(--items)); */
+  --r: calc(var(--position) - var(--offset));
+  --abs: max(calc(var(--r) * -1), var(--r));
+  transition: all 0.25s linear;
+  transform: rotateY(calc(-10deg * var(--r)))  translateX(calc(-300px * var(--r)));
+  z-index: calc((var(--position) - var(--abs)));
+}
+
+div.item:nth-child(1) {
+  --offset: 1;
+}
+div.item:nth-child(2) {
+  --offset: 2;
+}
+div.item:nth-child(3) {
+  --offset: 3;
+}
+div.item:nth-child(4) {
+  --offset: 4;
+}
+div.item:nth-child(5) {
+  --offset: 5;
+}
+
+.carousel-body input:nth-of-type(1) {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
+}
+
+.carousel-body input:nth-of-type(1):checked ~ main#caraousel3D {
+  --posittion: 1;
+}
+
+.carousel-body input:nth-of-type(2) {
+  grid-column: 3 / 4;
+  grid-row: 2 / 3;
+}
+
+.carousel-body input:nth-of-type(2):checked ~ main#caraousel3D {
+  --position: 2;
+}
+
+.carousel-body input:nth-of-type(3) {
+  grid-column: 4 / 5;
+  grid-row: 2 / 3;
+}
+
+.carousel-body input:nth-of-type(3):checked ~ main#caraousel3D {
+  --position: 3;
+}
+
+
+.carousel-body input:nth-of-type(4) {
+  grid-column: 5 / 6;
+  grid-row: 2 / 3;
+}
+
+.carousel-body input:nth-of-type(4):checked ~ main#caraousel3D {
+  --position: 4;
+}
+
+.carousel-body input:nth-of-type(5) {
+  grid-column: 6 / 7;
+  grid-row: 2 / 3;
+}
+
+.carousel-body input:nth-of-type(5):checked ~ main#caraousel3D {
+  --position: 5;
+}
+
+
