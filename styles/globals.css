@@ -115,3 +115,9 @@ a, a:hover, a:focus, a:active {
     color-scheme: dark;
   }
 }
+
+
+/* react-slick */
+.slick-slide > div{
+  margin: 0 5px;
+}
