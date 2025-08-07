@@ -19,13 +19,12 @@ const INITIAL_REASON = [
 function HomeContentDefaultDashboard() {
   const [data, setData] = useState([]);
   const tableContentHandler = () => {
-    let htmlContent = INITIAL_REASON.map(item => (
-      <div className={classes['card']}>
-      <h3>{item.title}</h3>
-      <p>
-        {item.summary}
-      </p>
-  
+    let htmlContent = INITIAL_REASON.map((item, idx) => (
+      <div className={classes['card']} key={item.title || idx}>
+        <h3>{item.title}</h3>
+        <p>
+          {item.summary}
+        </p>
       </div>
     ));
     setData(htmlContent);

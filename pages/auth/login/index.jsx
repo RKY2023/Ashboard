@@ -1,38 +1,41 @@
 import Header from "@/components/UI/Header/Header";
 import React, { useEffect, useCallback, useState, useReducer, useRef } from "react";
-import { Row, Col, FormGroup, FormLabel, FormControl, Form, Button} from 'react-bootstrap';
+import dynamic from 'next/dynamic';
+const Row = dynamic(() => import('react-bootstrap').then(mod => mod.Row), { ssr: false });
+const Col = dynamic(() => import('react-bootstrap').then(mod => mod.Col), { ssr: false });
+const FormGroup = dynamic(() => import('react-bootstrap').then(mod => mod.FormGroup), { ssr: false });
+const FormLabel = dynamic(() => import('react-bootstrap').then(mod => mod.FormLabel), { ssr: false });
+const FormControl = dynamic(() => import('react-bootstrap').then(mod => mod.FormControl), { ssr: false });
+const Form = dynamic(() => import('react-bootstrap').then(mod => mod.Form), { ssr: false });
+const Button = dynamic(() => import('react-bootstrap').then(mod => mod.Button), { ssr: false });
 
-
-const CreateUser = () => {
+const Login = () => {
     const [error, setError] = useState();
-    const [backendData, setBackendData] = useState();
-    const inputNameRef = useRef();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userData, setUserData] = useState();
     const inputEmailRef = useRef();
     const inputPasswordRef = useRef();
-    // const inputPhonenoRef = useRef();
 
     const submitHandler = (event) => {
         event.preventDefault();
         let userData;
+        
         userData = {
             email: inputEmailRef.current.value,
             password: inputPasswordRef.current.value,
-            name: inputNameRef.current.value, 
-            // phoneno: inputPhonenoRef.current.value
-        }        
-        console.log('submit', userData);
+        }      
+        // console.log('submit', userData);
         loginHandler(userData);
     }
 
     const loginHandler = useCallback( async (userData) => {
         let loginUrl, payload;
-            loginUrl = '/api/createUser';
-            payload = {
-                email: userData.email,
-                password: userData.password,
-                name: userData.name,
-                phoneno: userData.phoneno,
-            };
+        loginUrl = '/api/login';
+        payload = {
+            email: userData.email,
+            password: userData.password,
+        };
+         
         const response = await  fetch(loginUrl, {
             method: "POST",
             body: JSON.stringify(payload),
@@ -40,19 +43,22 @@ const CreateUser = () => {
                 'Content-Type': 'application/json'
             }
         });
+        // console.log(response)
         const data = await response.json();
-        console.log('data',data);
-        setBackendData(data);
+        // console.log('data',data);
+        if(data.success){
+            setIsLoggedIn(true);
+            setUserData(data.data);
+        }
     },[]);
 
     useEffect( () => {
         // console.log('useEffect');
         // console.log(process.env.API_URL);
-        // // datafetcher();
+        // datafetcher();
     },[]);
 
     async function addMeetupHandler (enteredMeetupData) {
-        console.log(enteredMeetupData);
         const response = await fetch('/api/user', {
             method: 'POST',
             body: JSON.stringify(enteredMeetupData),
@@ -61,22 +67,16 @@ const CreateUser = () => {
             }
         });
         const data = await response.json();
-        console.log(data);
+        // console.log(data);
         // getMeetupHandler();
     };
 
     return (
         <>
-        <Header />
+        <Header isLoggedIn={isLoggedIn} userData={userData}/>
         <div className="container mt-5">
         <div>{error}</div>
         <Form onSubmit={submitHandler}>
-            
-            <Form.Group className="mt-2">
-                <Form.Label>Name</Form.Label>
-                <Form.Control type="text" placeholder="Enter Name" ref={inputNameRef}/>
-            </Form.Group>
-            
             <Form.Group className="mt-2">
                 <Form.Label>Email</Form.Label>
                 <Form.Control type="email" placeholder="Enter Email" ref={inputEmailRef}/>
@@ -87,7 +87,7 @@ const CreateUser = () => {
             </Form.Group>
             
             <Button variant="primary" type="submit" className="mt-3">
-            Sign Up
+                Login
             </Button>
         </Form>
         </div>
@@ -95,4 +95,4 @@ const CreateUser = () => {
     );
 }
 
-export default CreateUser;
+export default Login;

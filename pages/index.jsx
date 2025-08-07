@@ -31,12 +31,13 @@ const Main = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Header isLoggedIn={isLoggedIn}/>
+      {/* <Header isLoggedIn={isLoggedIn}/> */}
       <Particle className='' />
       <main className={` ${inter.className} ${styles.body_gradiant}`}>
         <div>
          {/* import dashboard  */}
          <Dashboard />
+         {/* MapPage is dynamically imported to avoid SSR issues with Leaflet */}
         </div>     
         
       </main>
