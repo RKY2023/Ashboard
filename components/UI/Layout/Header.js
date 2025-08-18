@@ -1,8 +1,5 @@
 import React from "react";
-import dynamic from 'next/dynamic';
-const Container = dynamic(() => import('react-bootstrap').then(mod => mod.Container), { ssr: false });
-const Nav = dynamic(() => import('react-bootstrap').then(mod => mod.Nav), { ssr: false });
-const Navbar = dynamic(() => import('react-bootstrap').then(mod => mod.Navbar), { ssr: false });
+import { Container, Nav, Navbar } from "react-bootstrap";
 
 const Header = (props) => {
     return (

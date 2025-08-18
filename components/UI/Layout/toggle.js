@@ -1,5 +1,4 @@
-import dynamic from 'next/dynamic';
-const Form = dynamic(() => import('react-bootstrap').then(mod => mod.Form), { ssr: false });
+import { Form } from 'react-bootstrap';
 
 const SwitchExample = () => {
   return (

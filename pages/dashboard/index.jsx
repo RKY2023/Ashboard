@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import dynamic from 'next/dynamic';
-const Table = dynamic(() => import('react-bootstrap').then(mod => mod.Table), { ssr: false });
+import { Table } from 'react-bootstrap'
 import DefaultDashboard from './default';
 
 function Dashboard() {

@@ -3,12 +3,17 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialDashboardStore = {
   theme: 'light',
+  testing: 'Store slice not working'
 };
 
 const dashboardSlice = createSlice({
   name: 'dash',
   initialState: initialDashboardStore,
   reducers: {
+    test(state, action) {
+      const defaultTestText = 'Store slice working';
+      state.testing = defaultTestText;
+    },
     toggleTheme( state, action) {
       const bodyElement = document.getElementsByTagName('body')[0];
       if(state.theme == 'light'){
