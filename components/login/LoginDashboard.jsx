@@ -37,7 +37,7 @@ export default function LoginDashboard() {
             </div>
             <span className="text-white text-2xl font-bold">Ashboard</span>
             <div>
-              {test}
+              {/* {test} */}
             </div>
           </div>
         </header>
