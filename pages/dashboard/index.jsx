@@ -1,16 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { Table } from 'react-bootstrap'
+import React from 'react';
 import DefaultDashboard from './default';
 
 function Dashboard() {
-  useEffect(() => { 
-  },[]);
-
-  return (
-    <>
-    <DefaultDashboard/>
-    </>
-  )
+  return <DefaultDashboard />;
 }
 
 export default Dashboard

@@ -35,3 +35,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI/Claude/MCP related files
+claude/
+.claude/
+mcp/
+.mcp/
+ai/
+.ai/
+*.claude
+*.mcp
+claude-*
+mcp-*
+ai-*
+.claude-*
+.mcp-*
+.ai-*
