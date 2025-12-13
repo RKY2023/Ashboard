@@ -1,42 +1,29 @@
-import { Container, Nav, Navbar } from "react-bootstrap";
 import Link from "next/link";
-import classes from './Header.module.css';
-import ThemeButton from "./ThemeButton";
 
 const Header = (props) => {
     return (
-        <>
-        <Navbar bg="dark" expand="sm" variant="dark">
-            <Container>
-                <Navbar.Brand>Ashboard</Navbar.Brand>
-                <Nav>
-                    {/* <Nav.Link href='/home'>Home</Nav.Link> */}
-                    {/* <Link href='/home' className="nav-link">
-                        Home
-                    </Link> */}
-                    
-                    {/* <Link href='/blogs/govt' className="nav-link">
-                        Govt
-                    </Link> */}
-                    {props.isLoggedIn &&
-                    <Link href='/login' className="nav-link">
-                        {props.userData.name || 'user'} 
-                    </Link>
-                    }
-                    {!props.isLoggedIn &&
-                    <Link href='/login' className="nav-link">
-                        Login
-                    </Link>
-                    }
-                    {/* <ThemeButton /> */}
-                    {/* <Link href='/profile' className="nav-link">
-                        Profile
-                    </Link>                   */}
-                    
-                </Nav>
-            </Container>
-        </Navbar>
-        </>
+        <header className="border-b border-gray-200 bg-white">
+            <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-8">
+                    <h1 className="text-2xl font-bold">Ashboard</h1>
+                    <nav className="hidden md:flex gap-6">
+                        {/* Navigation links can be added here */}
+                    </nav>
+                </div>
+                <nav className="flex items-center gap-4">
+                    {props.isLoggedIn && (
+                        <Link href="/login" className="text-sm hover:text-gray-600">
+                            {props.userData?.name || 'user'}
+                        </Link>
+                    )}
+                    {!props.isLoggedIn && (
+                        <Link href="/login" className="text-sm hover:text-gray-600">
+                            Login
+                        </Link>
+                    )}
+                </nav>
+            </div>
+        </header>
     );
 };
 export default Header;

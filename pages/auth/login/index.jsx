@@ -1,8 +1,6 @@
 import Header from "@/components/UI/Header/Header";
+import { Button } from "@/components/ui/button";
 import { useEffect, useCallback, useState, useRef } from "react";
-import dynamic from 'next/dynamic';
-const Form = dynamic(() => import('react-bootstrap').then(mod => mod.Form), { ssr: false });
-const Button = dynamic(() => import('react-bootstrap').then(mod => mod.Button), { ssr: false });
 
 const Login = () => {
     const [error, setError] = useState();
@@ -69,22 +67,35 @@ const Login = () => {
     return (
         <>
         <Header isLoggedIn={isLoggedIn} userData={userData}/>
-        <div className="container mt-5">
-        <div>{error}</div>
-        <Form onSubmit={submitHandler}>
-            <Form.Group className="mt-2">
-                <Form.Label>Email</Form.Label>
-                <Form.Control type="email" placeholder="Enter Email" ref={inputEmailRef}/>
-            </Form.Group>
-            <Form.Group className="mt-2">
-                <Form.Label>Password</Form.Label>
-                <Form.Control type="password" placeholder="Password" ref={inputPasswordRef}/>
-            </Form.Group>
-            
-            <Button variant="primary" type="submit" className="mt-3">
-                Login
-            </Button>
-        </Form>
+        <div className="container mx-auto px-4 py-8 max-w-md">
+            {error && <div className="text-red-600 mb-4">{error}</div>}
+            <form onSubmit={submitHandler} className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium mb-2">Email</label>
+                    <input
+                        type="email"
+                        placeholder="Enter Email"
+                        ref={inputEmailRef}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium mb-2">Password</label>
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        ref={inputPasswordRef}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
+
+                <Button type="submit" className="w-full mt-4">
+                    Login
+                </Button>
+            </form>
         </div>
         </>
     );

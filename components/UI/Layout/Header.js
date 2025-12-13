@@ -1,24 +1,27 @@
-import React from "react";
-import { Container, Nav, Navbar } from "react-bootstrap";
+import Link from "next/link";
 
 const Header = (props) => {
     return (
-        <>
-            <Navbar bg="dark" expand="sm" variant="dark">
-                <Container>
-                    <Navbar.Brand>Ashboard</Navbar.Brand>
-                    <Nav>
-                        <Nav.Link href='/home'>Home</Nav.Link>
-                        <Nav.Link href='/routine'>Routine</Nav.Link>
-                        <Nav.Link href='/colors'>Colors</Nav.Link>
-                        <Nav.Link href='/govt'>Govt</Nav.Link>
-                        <Nav.Link href='/login'>Login</Nav.Link>
-                        <Nav.Link href='/profile'>Profile</Nav.Link>
-                    </Nav>
-                </Container>
-            </Navbar>
-        </>
-    )
-}
+        <header className="border-b border-gray-200 bg-white">
+            <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+                <h1 className="text-2xl font-bold">Ashboard</h1>
+                <nav className="flex gap-6">
+                    <Link href="/home" className="text-sm hover:text-gray-600">
+                        Home
+                    </Link>
+                    <Link href="/products" className="text-sm hover:text-gray-600">
+                        Products
+                    </Link>
+                    <Link href="/dashboard" className="text-sm hover:text-gray-600">
+                        Dashboard
+                    </Link>
+                    <Link href="/login" className="text-sm hover:text-gray-600">
+                        Login
+                    </Link>
+                </nav>
+            </div>
+        </header>
+    );
+};
 
 export default Header;

@@ -1,38 +1,38 @@
-import React from 'react'
-import {Card, CardHeader, CardBody, CardFooter, Divider, Link, Image} from "@nextui-org/react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 function DataList() {
   return (
-    <Card className="max-w-[400px] rounded-md">
-      <CardHeader className="flex gap-3">
-        <Image
-          alt="nextui logo"
+    <Card className="max-w-[400px]">
+      <CardHeader className="flex flex-row items-center gap-4">
+        <img
+          alt="GitHub logo"
           height={40}
-          radius="sm"
+          className="rounded-sm"
           src="https://avatars.githubusercontent.com/u/86160567?s=200&v=4"
           width={40}
         />
-        <div className="flex flex-col">
-          <p className="text-md m-0">NextUI</p>
-          <p className="text-small text-default-500 m-0">nextui.org</p>
+        <div>
+          <CardTitle className="text-base">shadcn/ui</CardTitle>
+          <CardDescription>shadcn.com</CardDescription>
         </div>
       </CardHeader>
-      <Divider className='m-0' />
-      <CardBody>
-        <p>Make beautiful websites regardless of your design experience.</p>
-      </CardBody>
-      <Divider  className='m-0' />
-      <CardFooter>
-        <Link
-          isExternal
-          showAnchorIcon
-          href="https://github.com/nextui-org/nextui"
+      <div className="border-t" />
+      <CardContent className="pt-4">
+        <p>Beautifully designed components built with Radix UI and Tailwind CSS.</p>
+      </CardContent>
+      <div className="border-t" />
+      <CardHeader className="pb-3">
+        <a
+          href="https://github.com/shadcn-ui/ui"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm font-medium text-blue-600 hover:underline"
         >
-          Go to
-        </Link>
-      </CardFooter>
+          Visit GitHub →
+        </a>
+      </CardHeader>
     </Card>
-  )
+  );
 }
 
 export default DataList;

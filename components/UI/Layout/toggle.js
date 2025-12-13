@@ -1,15 +1,22 @@
-import { Form } from 'react-bootstrap';
+import { useState } from 'react';
 
 const SwitchExample = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
   return (
-    <Form>
-      <Form.Check
-        type="switch"
-        id="custom-switch"
-        label="Dark Mode"
+    <div className="flex items-center gap-2">
+      <input
+        type="checkbox"
+        id="dark-mode-switch"
+        checked={isDarkMode}
+        onChange={(e) => setIsDarkMode(e.target.checked)}
+        className="w-4 h-4 rounded"
       />
-    </Form>
+      <label htmlFor="dark-mode-switch" className="text-sm font-medium cursor-pointer">
+        Dark Mode
+      </label>
+    </div>
   );
-}
+};
 
 export default SwitchExample;
