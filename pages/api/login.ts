@@ -1,9 +1,14 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
 import bcrypt from 'bcryptjs';
 import { getDatabase } from '@/lib/mongodb';
 import { validateLogin, ValidationError } from '@/lib/validation';
 import { getClientIp, checkLoginRateLimit } from '@/lib/rateLimit';
+import type { ApiResponse, LoginResponse } from '@/types';
 
-async function login(req, res) {
+async function login(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<LoginResponse>>
+) {
     // Only accept POST requests
     if (req.method !== 'POST') {
         return res.status(405).json({

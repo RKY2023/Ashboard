@@ -1,21 +1,32 @@
-import { React, useState } from 'react'
-import data from "../data//ListData.json"
+import data from "../data//ListData.json";
 
-function List(props) {
+interface ListItem {
+  id: number;
+  prefix: string;
+  meaning: string;
+  language: string;
+  words: string;
+}
+
+interface ListProps {
+  input: string;
+}
+
+function List({ input }: ListProps): JSX.Element {
     //create a new array by filtering the original array
-    const filteredData = data.filter((el) => {
+    const filteredData = data.filter((el: ListItem) => {
         //if no input the return the original
-        if (props.input === '') {
+        if (input === '') {
             return el;
         }
         //return the item which contains the user input
         else {
-            return el.prefix.toLowerCase().includes(props.input)
+            return el.prefix.toLowerCase().includes(input);
         }
-    })
+    });
     return (
         <ul>
-            {filteredData.map((item) => (
+            {filteredData.map((item: ListItem) => (
                 <li key={item.id}>
                     <div className='w-full flex-row'>
                         <div className='title '>
@@ -35,7 +46,7 @@ function List(props) {
                 </li>
             ))}
         </ul>
-    )
+    );
 }
 
-export default List
+export default List;

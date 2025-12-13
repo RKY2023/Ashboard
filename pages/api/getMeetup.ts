@@ -1,8 +1,13 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { getDatabase } from '@/lib/mongodb';
 import { checkDefaultRateLimit, getClientIp } from '@/lib/rateLimit';
+import type { ApiResponse, Meetup } from '@/types';
 
-async function myapi(req, res) {
-    if (req.method !== 'POST') {
+async function getMeetup(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<Meetup[]>>
+) {
+    if (req.method !== 'GET') {
         return res.status(405).json({
             success: false,
             error: { msg: 'Method not allowed' }
@@ -23,39 +28,20 @@ async function myapi(req, res) {
             }).setHeader('Retry-After', rateLimit.retryAfter);
         }
 
-        const data = req.body;
-
-        if (!data) {
-            return res.status(400).json({
-                success: false,
-                error: { msg: 'Request body is required' }
-            });
-        }
-
         // Get database connection
         const db = await getDatabase();
         const meetupsCollection = db.collection('meetups');
 
-        // Insert new meetup
-        const result = await meetupsCollection.insertOne(data);
+        // Fetch all meetups
+        const meetups = await meetupsCollection.find().toArray();
 
-        if (!result.acknowledged || !result.insertedId) {
-            return res.status(500).json({
-                success: false,
-                error: { msg: 'Failed to create meetup' }
-            });
-        }
-
-        res.status(201).json({
+        res.status(200).json({
             success: true,
-            data: {
-                msg: 'Meetup created successfully',
-                insertedId: result.insertedId
-            }
+            data: meetups
         });
 
     } catch (error) {
-        console.error('Meetup creation error:', error);
+        console.error('Meetup fetch error:', error);
         res.status(500).json({
             success: false,
             error: { msg: 'Internal server error' }
@@ -63,4 +49,4 @@ async function myapi(req, res) {
     }
 }
 
-export default myapi;
+export default getMeetup;

@@ -1,15 +1,13 @@
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { CheckCircle, Mail, User, Lock, Facebook, Twitter, Linkedin } from "lucide-react"
-import { useSelector } from "react-redux"
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { CheckCircle, Mail, User, Lock, Facebook, Twitter, Linkedin } from "lucide-react";
 
-export default function LoginDashboard() {
-  const test = useSelector((state) => state.dashboard.testing)
+export default function LoginDashboard(): JSX.Element {
 
   return (
     <div className="min-h-screen relatived.te overflow-hidden">

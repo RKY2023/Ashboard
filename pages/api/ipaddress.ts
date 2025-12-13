@@ -1,7 +1,12 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { MongoClient } from 'mongodb';
 import { checkDefaultRateLimit, getClientIp } from '@/lib/rateLimit';
+import type { ApiResponse } from '@/types';
 
-async function getRecipe(req, res) {
+async function getIPaddress(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<any[]>>
+) {
     if (req.method !== 'GET') {
         return res.status(405).json({
             success: false,
@@ -23,13 +28,16 @@ async function getRecipe(req, res) {
             }).setHeader('Retry-After', rateLimit.retryAfter);
         }
 
-        // Note: This route uses a different database (CSV)
-        // For production, consider using the connection pool in lib/mongodb.ts
-        const client = await MongoClient.connect(process.env.API_URL);
-        const db = client.db('CSV');
+        // Note: This route uses API_URL2 for a different database (sysinfo)
+        if (!process.env.API_URL2) {
+            throw new Error('API_URL2 environment variable is not defined');
+        }
 
-        const recipeCollection = db.collection('recipe');
-        const result = await recipeCollection.find().toArray();
+        const client = await MongoClient.connect(process.env.API_URL2);
+        const db = client.db('sysinfo');
+
+        const ipaddressesCollection = db.collection('ipaddress');
+        const result = await ipaddressesCollection.find().toArray();
 
         client.close();
 
@@ -39,7 +47,7 @@ async function getRecipe(req, res) {
         });
 
     } catch (error) {
-        console.error('Recipe fetch error:', error);
+        console.error('IP address fetch error:', error);
         res.status(500).json({
             success: false,
             error: { msg: 'Internal server error' }
@@ -47,4 +55,4 @@ async function getRecipe(req, res) {
     }
 }
 
-export default getRecipe;
+export default getIPaddress;

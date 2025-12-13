@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-function DataList() {
+function DataList(): JSX.Element {
   return (
     <Card className="max-w-[400px]">
       <CardHeader className="flex flex-row items-center gap-4">

@@ -1,9 +1,14 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
 import bcrypt from 'bcryptjs';
 import { getDatabase } from '@/lib/mongodb';
 import { validateUserRegistration, ValidationError } from '@/lib/validation';
 import { getClientIp, checkRegisterRateLimit } from '@/lib/rateLimit';
+import type { ApiResponse, RegisterResponse } from '@/types';
 
-async function createUser(req, res) {
+async function createUser(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<RegisterResponse>>
+) {
     // Only accept POST requests
     if (req.method !== 'POST') {
         return res.status(405).json({

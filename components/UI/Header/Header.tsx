@@ -1,6 +1,11 @@
 import Link from "next/link";
 
-const Header = (props) => {
+interface HeaderProps {
+    isLoggedIn?: boolean;
+    userData?: { name: string };
+}
+
+const Header = (props: HeaderProps): JSX.Element => {
     return (
         <header className="border-b border-gray-200 bg-white">
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">

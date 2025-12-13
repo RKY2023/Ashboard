@@ -1,3 +1,4 @@
+import type { NextApiRequest } from 'next';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 
 // In-memory rate limiters for different endpoints
@@ -21,10 +22,15 @@ const defaultLimiter = new RateLimiterMemory({
   blockDuration: 15 * 60, // Block for 15 minutes after limit
 });
 
+interface RateLimitResult {
+  allowed: boolean;
+  retryAfter?: number;
+}
+
 /**
  * Get client IP address from request
  */
-export function getClientIp(req: any): string {
+export function getClientIp(req: NextApiRequest): string {
   return (
     req.headers['x-forwarded-for']?.split(',')[0] ||
     req.headers['x-real-ip'] ||
@@ -36,7 +42,7 @@ export function getClientIp(req: any): string {
 /**
  * Check if login attempt is rate limited
  */
-export async function checkLoginRateLimit(ip: string): Promise<{ allowed: boolean; retryAfter?: number }> {
+export async function checkLoginRateLimit(ip: string): Promise<RateLimitResult> {
   try {
     await loginLimiter.consume(ip, 1);
     return { allowed: true };
@@ -51,7 +57,7 @@ export async function checkLoginRateLimit(ip: string): Promise<{ allowed: boolea
 /**
  * Check if registration attempt is rate limited
  */
-export async function checkRegisterRateLimit(ip: string): Promise<{ allowed: boolean; retryAfter?: number }> {
+export async function checkRegisterRateLimit(ip: string): Promise<RateLimitResult> {
   try {
     await registerLimiter.consume(ip, 1);
     return { allowed: true };
@@ -66,7 +72,7 @@ export async function checkRegisterRateLimit(ip: string): Promise<{ allowed: boo
 /**
  * Check if general API request is rate limited
  */
-export async function checkDefaultRateLimit(ip: string): Promise<{ allowed: boolean; retryAfter?: number }> {
+export async function checkDefaultRateLimit(ip: string): Promise<RateLimitResult> {
   try {
     await defaultLimiter.consume(ip, 1);
     return { allowed: true };

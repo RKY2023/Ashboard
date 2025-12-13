@@ -1,7 +1,12 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { MongoClient } from 'mongodb';
 import { checkDefaultRateLimit, getClientIp } from '@/lib/rateLimit';
+import type { ApiResponse } from '@/types';
 
-async function getGroceries(req, res) {
+async function getRecipe(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<any[]>>
+) {
     if (req.method !== 'GET') {
         return res.status(405).json({
             success: false,
@@ -28,8 +33,8 @@ async function getGroceries(req, res) {
         const client = await MongoClient.connect(process.env.API_URL);
         const db = client.db('CSV');
 
-        const groceriesCollection = db.collection('groceries');
-        const result = await groceriesCollection.find().toArray();
+        const recipeCollection = db.collection('recipe');
+        const result = await recipeCollection.find().toArray();
 
         client.close();
 
@@ -39,7 +44,7 @@ async function getGroceries(req, res) {
         });
 
     } catch (error) {
-        console.error('Groceries fetch error:', error);
+        console.error('Recipe fetch error:', error);
         res.status(500).json({
             success: false,
             error: { msg: 'Internal server error' }
@@ -47,4 +52,4 @@ async function getGroceries(req, res) {
     }
 }
 
-export default getGroceries;
+export default getRecipe;
