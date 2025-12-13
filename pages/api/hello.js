@@ -1,33 +1,66 @@
-// // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import { getDatabase } from '@/lib/mongodb';
+import { checkDefaultRateLimit, getClientIp } from '@/lib/rateLimit';
 
-// export default function handler(req, res) {
-//   res.status(200).json({ name: "John Doe" });
-// }
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+async function myapi(req, res) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({
+            success: false,
+            error: { msg: 'Method not allowed' }
+        });
+    }
 
-// export default (req, res) => {
-//   res.status(200).json({ name: 'John Doe' })
-// }
+    try {
+        // Rate limiting check
+        const clientIp = getClientIp(req);
+        const rateLimit = await checkDefaultRateLimit(clientIp);
 
-import { MongoClient } from 'mongodb';
+        if (!rateLimit.allowed) {
+            return res.status(429).json({
+                success: false,
+                error: {
+                    msg: `Too many requests. Please try again in ${rateLimit.retryAfter} seconds`
+                }
+            }).setHeader('Retry-After', rateLimit.retryAfter);
+        }
 
-async function myapi (req, res) {
-  if(req.method === 'POST'){
-    const data = req.body;
-    // 
-    
-    const { title, image, address, description } = data;
-    const client = await MongoClient.connect(process.env.API_URL);
-    const db = client.db();
+        const data = req.body;
 
-    const meetupsCollection = db.collection('meetups');
-    const result = await meetupsCollection.insertOne(data);
-    
-    console.log(result);
+        if (!data) {
+            return res.status(400).json({
+                success: false,
+                error: { msg: 'Request body is required' }
+            });
+        }
 
-    client.close();
-    res.status();
+        // Get database connection
+        const db = await getDatabase();
+        const meetupsCollection = db.collection('meetups');
 
-  };
-};
+        // Insert new meetup
+        const result = await meetupsCollection.insertOne(data);
+
+        if (!result.acknowledged || !result.insertedId) {
+            return res.status(500).json({
+                success: false,
+                error: { msg: 'Failed to create meetup' }
+            });
+        }
+
+        res.status(201).json({
+            success: true,
+            data: {
+                msg: 'Meetup created successfully',
+                insertedId: result.insertedId
+            }
+        });
+
+    } catch (error) {
+        console.error('Meetup creation error:', error);
+        res.status(500).json({
+            success: false,
+            error: { msg: 'Internal server error' }
+        });
+    }
+}
+
 export default myapi;

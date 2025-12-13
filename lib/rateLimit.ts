@@ -1,0 +1,92 @@
+import { RateLimiterMemory } from 'rate-limiter-flexible';
+
+// In-memory rate limiters for different endpoints
+// Using memory instead of Redis for simplicity (can be upgraded to Redis later)
+
+const loginLimiter = new RateLimiterMemory({
+  points: 5, // Number of requests
+  duration: 15 * 60, // Per 15 minutes
+  blockDuration: 15 * 60, // Block for 15 minutes after limit
+});
+
+const registerLimiter = new RateLimiterMemory({
+  points: 3, // Number of requests
+  duration: 60 * 60, // Per hour
+  blockDuration: 60 * 60, // Block for 1 hour after limit
+});
+
+const defaultLimiter = new RateLimiterMemory({
+  points: 100, // Number of requests
+  duration: 15 * 60, // Per 15 minutes
+  blockDuration: 15 * 60, // Block for 15 minutes after limit
+});
+
+/**
+ * Get client IP address from request
+ */
+export function getClientIp(req: any): string {
+  return (
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    req.headers['x-real-ip'] ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
+}
+
+/**
+ * Check if login attempt is rate limited
+ */
+export async function checkLoginRateLimit(ip: string): Promise<{ allowed: boolean; retryAfter?: number }> {
+  try {
+    await loginLimiter.consume(ip, 1);
+    return { allowed: true };
+  } catch (error: any) {
+    return {
+      allowed: false,
+      retryAfter: Math.ceil(error.msBeforeNext / 1000),
+    };
+  }
+}
+
+/**
+ * Check if registration attempt is rate limited
+ */
+export async function checkRegisterRateLimit(ip: string): Promise<{ allowed: boolean; retryAfter?: number }> {
+  try {
+    await registerLimiter.consume(ip, 1);
+    return { allowed: true };
+  } catch (error: any) {
+    return {
+      allowed: false,
+      retryAfter: Math.ceil(error.msBeforeNext / 1000),
+    };
+  }
+}
+
+/**
+ * Check if general API request is rate limited
+ */
+export async function checkDefaultRateLimit(ip: string): Promise<{ allowed: boolean; retryAfter?: number }> {
+  try {
+    await defaultLimiter.consume(ip, 1);
+    return { allowed: true };
+  } catch (error: any) {
+    return {
+      allowed: false,
+      retryAfter: Math.ceil(error.msBeforeNext / 1000),
+    };
+  }
+}
+
+/**
+ * Reset rate limit for an IP (useful for testing)
+ */
+export async function resetRateLimit(ip: string, limiterType: 'login' | 'register' | 'default' = 'default') {
+  const limiter = limiterType === 'login' ? loginLimiter : limiterType === 'register' ? registerLimiter : defaultLimiter;
+
+  try {
+    await limiter.delete(ip);
+  } catch (error) {
+    console.error(`Failed to reset ${limiterType} rate limit for ${ip}:`, error);
+  }
+}

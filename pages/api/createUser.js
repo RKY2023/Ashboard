@@ -1,75 +1,97 @@
-import { MongoClient } from 'mongodb';
+import bcrypt from 'bcryptjs';
+import { getDatabase } from '@/lib/mongodb';
+import { validateUserRegistration, ValidationError } from '@/lib/validation';
+import { getClientIp, checkRegisterRateLimit } from '@/lib/rateLimit';
 
-async function createUser (req, res) {
-    console.log(process.env.API_URL);
-    if(req.method === 'POST'){
-        const data = req.body;        
-        const { name, email, password, phoneno } = data;
-        const client = await MongoClient.connect(process.env.API_URL);
-        const db = client.db();
-    
-        const meetupsCollection = db.collection('users');
-        const isAlreadyUser = await meetupsCollection.findOne({ "email": email});
-        // const result = meetupsCollection.update({
-        //     name,
-        //     email,
-        //     password,
-        //     phoneno
-        // }, {upsert:true});
-        console.log(result);
-        const defaultResponse = {
+async function createUser(req, res) {
+    // Only accept POST requests
+    if (req.method !== 'POST') {
+        return res.status(405).json({
             success: false,
-            error: {
-                msg: 'Something went wrong!'
-            }
-        }
-        // If user already exist
-        if(isAlreadyUser && isAlreadyUser._id) {
-            defaultResponse.error = {
-                msg : 'User already exist'
-            }
-            res.status(204).json(defaultResponse);
-        } else {
-            const result = await meetupsCollection.insertOne(data);
-            // create user
-            if(result.acknowledged) {
-                if(result.insertedId) {
-                    defaultResponse.success = true;
-                    delete defaultResponse['error'];
+            error: { msg: 'Method not allowed' }
+        });
+    }
 
-                    defaultResponse.data = {
-                        msg : 'User created successfully'
-                    }
-                    res.status(204).json(defaultResponse);
-                } else {
-                    defaultResponse.error = {
-                        msg : 'User creation failed!'
-                    }
-                    res.status(204).json(defaultResponse);
+    try {
+        // Rate limiting check
+        const clientIp = getClientIp(req);
+        const rateLimit = await checkRegisterRateLimit(clientIp);
+
+        if (!rateLimit.allowed) {
+            return res.status(429).json({
+                success: false,
+                error: {
+                    msg: `Too many registration attempts. Please try again in ${rateLimit.retryAfter} seconds`
                 }
-            } else {
-                res.status(404).json(defaultResponse);
-            }
+            }).setHeader('Retry-After', rateLimit.retryAfter);
         }
-        client.close();
-    };
+
+        // Validate input
+        const validatedData = validateUserRegistration(req.body);
+        const { name, email, password, phoneno } = validatedData;
+
+        // Get database connection
+        const db = await getDatabase();
+        const usersCollection = db.collection('users');
+
+        // Check if user already exists
+        const existingUser = await usersCollection.findOne({ email });
+
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                error: { msg: 'User with this email already exists' }
+            });
+        }
+
+        // Hash password with bcrypt (12 rounds)
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Create user document
+        const userDocument = {
+            name,
+            email,
+            password: hashedPassword,
+            phoneno: phoneno || null,
+            createdAt: new Date()
+        };
+
+        // Insert user into database
+        const result = await usersCollection.insertOne(userDocument);
+
+        if (!result.acknowledged || !result.insertedId) {
+            return res.status(500).json({
+                success: false,
+                error: { msg: 'Failed to create user' }
+            });
+        }
+
+        // Return success response without password
+        res.status(201).json({
+            success: true,
+            data: {
+                msg: 'User created successfully',
+                userId: result.insertedId
+            }
+        });
+
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    msg: 'Validation failed',
+                    details: error.errors
+                }
+            });
+        }
+
+        console.error('User creation error:', error);
+        res.status(500).json({
+            success: false,
+            error: { msg: 'Internal server error' }
+        });
+    }
 }
 
-async function User (req, res) {
-    console.log(process.env.API_URL);
-    // initURL: 'http://localhost:3000/api/user',
-    // initQuery: {},
-    // initProtocol: 'http',
-    if(req.url === '/api/user'){
-        console.log('signup');
-        // console.log(req);
-        // createUser(req, res);
-    };
-    if(req.method === 'GET'){
-        console.log('login');
-        const data = req.body;        
-        const { name, email, password, phoneno } = data;
-        // getUsers(req, res);
-    };
-}
 export default createUser;

@@ -1,43 +1,50 @@
 import { MongoClient } from 'mongodb';
+import { checkDefaultRateLimit, getClientIp } from '@/lib/rateLimit';
 
-async function getRecipe (req, res) {
-//   if(req.method === 'GET'){
-    // const data = req.body;
-    // console.log(process.env.API_URL);
-    // const { title, image, address, description } = data;
-    const client = await MongoClient.connect(process.env.API_URL);
-    const db = client.db('CSV');
+async function getRecipe(req, res) {
+    if (req.method !== 'GET') {
+        return res.status(405).json({
+            success: false,
+            error: { msg: 'Method not allowed' }
+        });
+    }
 
-    const groceries = db.collection('recipe');
-    const result = await groceries.find().toArray();
+    try {
+        // Rate limiting check
+        const clientIp = getClientIp(req);
+        const rateLimit = await checkDefaultRateLimit(clientIp);
 
-    console.log(result);
-    
+        if (!rateLimit.allowed) {
+            return res.status(429).json({
+                success: false,
+                error: {
+                    msg: `Too many requests. Please try again in ${rateLimit.retryAfter} seconds`
+                }
+            }).setHeader('Retry-After', rateLimit.retryAfter);
+        }
 
-    client.close();
-    // return result.toArray();
-    return res.status(200).json(result);
-
-//   };
-};
-
-async function createUser (req, res) {
-    console.log(process.env.API_URL);
-    if(req.method === 'POST'){
-        const data = req.body;        
-        const { name, email, password, phoneno } = data;
+        // Note: This route uses a different database (CSV)
+        // For production, consider using the connection pool in lib/mongodb.ts
         const client = await MongoClient.connect(process.env.API_URL);
         const db = client.db('CSV');
-    
-        const groceries = db.collection('recipe');
-        // const result = await groceries.insertOne(data);
-        const result = await groceries.update(data, data, {upsert:true});
-        
-        console.log(result);
-    
+
+        const recipeCollection = db.collection('recipe');
+        const result = await recipeCollection.find().toArray();
+
         client.close();
-        res.status();
-    
-    };
+
+        res.status(200).json({
+            success: true,
+            data: result
+        });
+
+    } catch (error) {
+        console.error('Recipe fetch error:', error);
+        res.status(500).json({
+            success: false,
+            error: { msg: 'Internal server error' }
+        });
+    }
 }
+
 export default getRecipe;
