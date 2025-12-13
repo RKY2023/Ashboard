@@ -1,11 +1,6 @@
 import Header from "@/components/UI/Header/Header";
-import React, { useEffect, useCallback, useState, useReducer, useRef } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import dynamic from 'next/dynamic';
-const Row = dynamic(() => import('react-bootstrap').then(mod => mod.Row), { ssr: false });
-const Col = dynamic(() => import('react-bootstrap').then(mod => mod.Col), { ssr: false });
-const FormGroup = dynamic(() => import('react-bootstrap').then(mod => mod.FormGroup), { ssr: false });
-const FormLabel = dynamic(() => import('react-bootstrap').then(mod => mod.FormLabel), { ssr: false });
-const FormControl = dynamic(() => import('react-bootstrap').then(mod => mod.FormControl), { ssr: false });
 const Form = dynamic(() => import('react-bootstrap').then(mod => mod.Form), { ssr: false });
 const Button = dynamic(() => import('react-bootstrap').then(mod => mod.Button), { ssr: false });
 

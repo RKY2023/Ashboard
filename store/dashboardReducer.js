@@ -31,10 +31,9 @@ const dashboardSlice = createSlice({
       const bodyElement = document.getElementsByTagName('body')[0];
       const getTheme = localStorage.getItem('theme');
       if(getTheme === null){
-        console.log('tat');
         state.theme = 'light';
         bodyElement.setAttribute('data-bs-theme','light');
-        localStorage.setItem('theme','light');        
+        localStorage.setItem('theme','light');
       }
       if(payload === 'dark') {
         // state.toggleTheme;

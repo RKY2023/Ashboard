@@ -1,6 +1,8 @@
-export default const useCustom ({}) => {
+import { useState } from 'react';
+
+export default function useCustom() {
     const [data, setData] = useState(null);
-    cont [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     return {
         data,

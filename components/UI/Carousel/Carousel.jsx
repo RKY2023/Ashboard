@@ -1,33 +1,31 @@
-import React from "react";
 import { useState } from "react";
-// import "./Carousel.css";
 
-const Carousel = ({items}) => {
+const Carousel = ({ items }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const goToPrevious = () => {
         setCurrentIndex((prevIndex) => {
-            prevIndex === 0 ?  items.length - 1 : prevIndex - 1;
-        })
-    }
+            return prevIndex === 0 ? items.length - 1 : prevIndex - 1;
+        });
+    };
 
     const goToNext = () => {
         setCurrentIndex((prevIndex) => {
-            prevIndex === items.length - 1 ? 0 : prevIndex + 1;
-        })
-    }
+            return prevIndex === items.length - 1 ? 0 : prevIndex + 1;
+        });
+    };
 
     return (
-        <div className="carousel" key={key}>
-            <button className="carousel-button prev" onClick={goToPreviouse}>
+        <div className="carousel">
+            <button className="carousel-button prev" onClick={goToPrevious}>
                 &#10094;
             </button>
             <div className="carousel-content">
                 {items.map((item, index) => (
                     <div
                         key={index}
-                        classNam={`carousel-item ${
-                            index === currenIndex ? "active" : ""
+                        className={`carousel-item ${
+                            index === currentIndex ? "active" : ""
                         }`}
                     >
                         <h1>{item.title}</h1>
@@ -40,7 +38,7 @@ const Carousel = ({items}) => {
                 &#10095;
             </button>
         </div>
-    )
-}
+    );
+};
 
 export default Carousel;
