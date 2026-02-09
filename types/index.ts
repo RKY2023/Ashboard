@@ -107,3 +107,61 @@ export interface AsyncState<T = any> {
   isLoading: boolean;
   error: Error | null;
 }
+
+/**
+ * Grocery item type
+ */
+export interface Grocery {
+  _id?: string;
+  name: string;
+  category?: string;
+  price?: number;
+  quantity?: number;
+  unit?: string;
+}
+
+/**
+ * Recipe type
+ */
+export interface Recipe {
+  _id?: string;
+  title: string;
+  description?: string;
+  ingredients?: string[];
+  instructions?: string[];
+  prepTime?: number;
+  cookTime?: number;
+  servings?: number;
+}
+
+/**
+ * IP Address type
+ */
+export interface IPAddress {
+  _id?: string;
+  ipAddress: string;
+  hostname?: string;
+  location?: string;
+  lastSeen?: Date;
+  status?: string;
+}
+
+/**
+ * Paginated API response type
+ */
+export interface PaginatedApiResponse<T = any> {
+  success: boolean;
+  data?: T[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+  error?: {
+    msg: string;
+    details?: Array<{ field: string; message: string }>;
+  };
+}

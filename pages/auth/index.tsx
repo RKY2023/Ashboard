@@ -1,112 +1,142 @@
-import Header from "@/components/UI/Header/Header";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userRegistrationSchema } from "@/lib/validation";
+import type { UserRegistration } from "@/lib/validation";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useEffect, useCallback, useState, useRef } from "react";
-
+import Header from "@/components/ui/Header/Header";
+import { useState } from "react";
 
 const CreateUser = () => {
-    const [error, setError] = useState();
-    const [backendData, setBackendData] = useState();
-    const inputNameRef = useRef();
-    const inputEmailRef = useRef();
-    const inputPasswordRef = useRef();
-    // const inputPhonenoRef = useRef();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-    const submitHandler = (event) => {
-        event.preventDefault();
-        let userData;
-        userData = {
-            email: inputEmailRef.current.value,
-            password: inputPasswordRef.current.value,
-            name: inputNameRef.current.value,
-            // phoneno: inputPhonenoRef.current.value
-        }
-        loginHandler(userData);
+  const form = useForm<UserRegistration>({
+    resolver: zodResolver(userRegistrationSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      phoneno: "",
+    },
+  });
+
+  const onSubmit = async (data: UserRegistration) => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/createUser', {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(true);
+        form.reset();
+      } else {
+        setError(result.error?.msg || 'Registration failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    const loginHandler = useCallback( async (userData) => {
-        let loginUrl, payload;
-            loginUrl = '/api/createUser';
-            payload = {
-                email: userData.email,
-                password: userData.password,
-                name: userData.name,
-                phoneno: userData.phoneno,
-            };
-        const response = await  fetch(loginUrl, {
-            method: "POST",
-            body: JSON.stringify(payload),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        const data = await response.json();
-        setBackendData(data);
-    },[]);
+  return (
+    <>
+      <Header />
+      <div className="container mx-auto px-4 py-8 max-w-md">
+        {error && (
+          <div className="text-red-600 mb-4 p-3 border border-red-300 rounded-md bg-red-50">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="text-green-600 mb-4 p-3 border border-green-300 rounded-md bg-green-50">
+            Account created successfully!
+          </div>
+        )}
 
-    useEffect( () => {
-        // console.log('useEffect');
-        // console.log(process.env.API_URL);
-        // // datafetcher();
-    },[]);
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control as any}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-    async function addMeetupHandler (enteredMeetupData) {
-        const response = await fetch('/api/user', {
-            method: 'POST',
-            body: JSON.stringify(enteredMeetupData),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        const data = await response.json();
-        // getMeetupHandler();
-    };
+            <FormField
+              control={form.control as any}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="Enter Email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-    return (
-        <>
-        <Header />
-        <div className="container mx-auto px-4 py-8 max-w-md">
-            {error && <div className="text-red-600 mb-4">{error}</div>}
-            <form onSubmit={submitHandler} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium mb-2">Name</label>
-                    <input
-                        type="text"
-                        placeholder="Enter Name"
-                        ref={inputNameRef}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
-                </div>
+            <FormField
+              control={form.control as any}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <div>
-                    <label className="block text-sm font-medium mb-2">Email</label>
-                    <input
-                        type="email"
-                        placeholder="Enter Email"
-                        ref={inputEmailRef}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
-                </div>
+            <FormField
+              control={form.control as any}
+              name="phoneno"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number (Optional)</FormLabel>
+                  <FormControl>
+                    <Input type="tel" placeholder="Phone Number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <div>
-                    <label className="block text-sm font-medium mb-2">Password</label>
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        ref={inputPasswordRef}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
-                </div>
-
-                <Button type="submit" className="w-full mt-4">
-                    Sign Up
-                </Button>
-            </form>
-        </div>
-        </>
-    );
-}
+            <Button type="submit" className="w-full mt-4" disabled={isSubmitting}>
+              {isSubmitting ? "Creating Account..." : "Sign Up"}
+            </Button>
+          </form>
+        </Form>
+      </div>
+    </>
+  );
+};
 
 export default CreateUser;

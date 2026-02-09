@@ -1,11 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { MongoClient } from 'mongodb';
+import { getCsvDatabase } from '@/lib/mongodb';
 import { checkDefaultRateLimit, getClientIp } from '@/lib/rateLimit';
-import type { ApiResponse } from '@/types';
+import { getPaginationParams, createPaginationMeta } from '@/lib/pagination';
+import type { PaginatedApiResponse, Recipe } from '@/types';
 
 async function getRecipe(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse<any[]>>
+  res: NextApiResponse<PaginatedApiResponse<Recipe>>
 ) {
     if (req.method !== 'GET') {
         return res.status(405).json({
@@ -20,27 +21,39 @@ async function getRecipe(
         const rateLimit = await checkDefaultRateLimit(clientIp);
 
         if (!rateLimit.allowed) {
+            res.setHeader('Retry-After', rateLimit.retryAfter || 0);
             return res.status(429).json({
                 success: false,
                 error: {
                     msg: `Too many requests. Please try again in ${rateLimit.retryAfter} seconds`
                 }
-            }).setHeader('Retry-After', rateLimit.retryAfter);
+            });
         }
 
-        // Note: This route uses a different database (CSV)
-        // For production, consider using the connection pool in lib/mongodb.ts
-        const client = await MongoClient.connect(process.env.API_URL);
-        const db = client.db('CSV');
+        // Using connection pool for improved performance
+        const db = await getCsvDatabase();
 
-        const recipeCollection = db.collection('recipe');
-        const result = await recipeCollection.find().toArray();
+        const recipeCollection = db.collection<Recipe>('recipe');
 
-        client.close();
+        // Get pagination parameters
+        const { page, limit, skip } = getPaginationParams(req);
+
+        // Get total count
+        const total = await recipeCollection.countDocuments();
+
+        // Fetch paginated recipes
+        const result = await recipeCollection
+            .find()
+            .skip(skip)
+            .limit(limit)
+            .toArray();
+
+        const pagination = createPaginationMeta(page, limit, total);
 
         res.status(200).json({
             success: true,
-            data: result
+            data: result,
+            pagination
         });
 
     } catch (error) {

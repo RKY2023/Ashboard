@@ -43,3 +43,43 @@ export async function closeDatabase(): Promise<void> {
     cachedDb = null;
   }
 }
+
+// Multi-database connection pooling
+interface CachedConnection {
+  client: MongoClient;
+  db: Db;
+}
+
+const connectionCache = new Map<string, CachedConnection>();
+
+export async function getDatabaseByName(
+  connectionString: string,
+  databaseName: string
+): Promise<Db> {
+  const cacheKey = `${connectionString}:${databaseName}`;
+
+  if (connectionCache.has(cacheKey)) {
+    return connectionCache.get(cacheKey)!.db;
+  }
+
+  const client = await MongoClient.connect(connectionString);
+  const db = client.db(databaseName);
+
+  connectionCache.set(cacheKey, { client, db });
+  return db;
+}
+
+// Pre-configured helpers
+export async function getCsvDatabase(): Promise<Db> {
+  if (!process.env.API_URL) {
+    throw new Error('API_URL environment variable is not defined');
+  }
+  return getDatabaseByName(process.env.API_URL, 'CSV');
+}
+
+export async function getSysinfoDatabase(): Promise<Db> {
+  if (!process.env.API_URL2) {
+    throw new Error('API_URL2 environment variable is not defined');
+  }
+  return getDatabaseByName(process.env.API_URL2, 'sysinfo');
+}

@@ -1,104 +1,108 @@
-import Header from "@/components/UI/Header/Header";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "@/lib/validation";
+import type { Login } from "@/lib/validation";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useEffect, useCallback, useState, useRef } from "react";
+import Header from "@/components/ui/Header/Header";
+import { useState } from "react";
 
-const Login = () => {
-    const [error, setError] = useState();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [userData, setUserData] = useState();
-    const inputEmailRef = useRef();
-    const inputPasswordRef = useRef();
+const LoginPage = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
 
-    const submitHandler = (event) => {
-        event.preventDefault();
-        let userData;
-        
-        userData = {
-            email: inputEmailRef.current.value,
-            password: inputPasswordRef.current.value,
-        }      
-        // console.log('submit', userData);
-        loginHandler(userData);
+  const form = useForm<Login>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: Login) => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/login', {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setIsLoggedIn(true);
+        setUserData(result.data);
+      } else {
+        setError(result.error?.msg || 'Login failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    const loginHandler = useCallback( async (userData) => {
-        let loginUrl, payload;
-        loginUrl = '/api/login';
-        payload = {
-            email: userData.email,
-            password: userData.password,
-        };
-         
-        const response = await  fetch(loginUrl, {
-            method: "POST",
-            body: JSON.stringify(payload),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        // console.log(response)
-        const data = await response.json();
-        // console.log('data',data);
-        if(data.success){
-            setIsLoggedIn(true);
-            setUserData(data.data);
-        }
-    },[]);
+  return (
+    <>
+      <Header isLoggedIn={isLoggedIn} userData={userData} />
+      <div className="container mx-auto px-4 py-8 max-w-md">
+        {error && (
+          <div className="text-red-600 mb-4 p-3 border border-red-300 rounded-md bg-red-50">
+            {error}
+          </div>
+        )}
 
-    useEffect( () => {
-        // console.log('useEffect');
-        // console.log(process.env.API_URL);
-        // datafetcher();
-    },[]);
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control as any}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="Enter Email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-    async function addMeetupHandler (enteredMeetupData) {
-        const response = await fetch('/api/user', {
-            method: 'POST',
-            body: JSON.stringify(enteredMeetupData),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        const data = await response.json();
-        // console.log(data);
-        // getMeetupHandler();
-    };
+            <FormField
+              control={form.control as any}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-    return (
-        <>
-        <Header isLoggedIn={isLoggedIn} userData={userData}/>
-        <div className="container mx-auto px-4 py-8 max-w-md">
-            {error && <div className="text-red-600 mb-4">{error}</div>}
-            <form onSubmit={submitHandler} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium mb-2">Email</label>
-                    <input
-                        type="email"
-                        placeholder="Enter Email"
-                        ref={inputEmailRef}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
-                </div>
+            <Button type="submit" className="w-full mt-4" disabled={isSubmitting}>
+              {isSubmitting ? "Logging in..." : "Login"}
+            </Button>
+          </form>
+        </Form>
+      </div>
+    </>
+  );
+};
 
-                <div>
-                    <label className="block text-sm font-medium mb-2">Password</label>
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        ref={inputPasswordRef}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    />
-                </div>
-
-                <Button type="submit" className="w-full mt-4">
-                    Login
-                </Button>
-            </form>
-        </div>
-        </>
-    );
-}
-
-export default Login;
+export default LoginPage;

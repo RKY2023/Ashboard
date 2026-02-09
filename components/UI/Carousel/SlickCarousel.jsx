@@ -1,5 +1,4 @@
 import React from "react";
-import { useState } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -15,7 +14,7 @@ const Carousel = ({items}) => {
     }
 
     return (
-        <div className="w-3/4 auto" key={key}>
+        <div className="w-3/4 auto">
             <Slider {...settings}>
                 {items.map((item, index) => (
                     <div key={index} className="carousel-item">

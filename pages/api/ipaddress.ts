@@ -1,11 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { MongoClient } from 'mongodb';
+import { getSysinfoDatabase } from '@/lib/mongodb';
 import { checkDefaultRateLimit, getClientIp } from '@/lib/rateLimit';
-import type { ApiResponse } from '@/types';
+import { getPaginationParams, createPaginationMeta } from '@/lib/pagination';
+import type { PaginatedApiResponse, IPAddress } from '@/types';
 
 async function getIPaddress(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse<any[]>>
+  res: NextApiResponse<PaginatedApiResponse<IPAddress>>
 ) {
     if (req.method !== 'GET') {
         return res.status(405).json({
@@ -20,30 +21,39 @@ async function getIPaddress(
         const rateLimit = await checkDefaultRateLimit(clientIp);
 
         if (!rateLimit.allowed) {
+            res.setHeader('Retry-After', rateLimit.retryAfter || 0);
             return res.status(429).json({
                 success: false,
                 error: {
                     msg: `Too many requests. Please try again in ${rateLimit.retryAfter} seconds`
                 }
-            }).setHeader('Retry-After', rateLimit.retryAfter);
+            });
         }
 
-        // Note: This route uses API_URL2 for a different database (sysinfo)
-        if (!process.env.API_URL2) {
-            throw new Error('API_URL2 environment variable is not defined');
-        }
+        // Using connection pool for improved performance
+        const db = await getSysinfoDatabase();
 
-        const client = await MongoClient.connect(process.env.API_URL2);
-        const db = client.db('sysinfo');
+        const ipaddressesCollection = db.collection<IPAddress>('ipaddress');
 
-        const ipaddressesCollection = db.collection('ipaddress');
-        const result = await ipaddressesCollection.find().toArray();
+        // Get pagination parameters
+        const { page, limit, skip } = getPaginationParams(req);
 
-        client.close();
+        // Get total count
+        const total = await ipaddressesCollection.countDocuments();
+
+        // Fetch paginated IP addresses
+        const result = await ipaddressesCollection
+            .find()
+            .skip(skip)
+            .limit(limit)
+            .toArray();
+
+        const pagination = createPaginationMeta(page, limit, total);
 
         res.status(200).json({
             success: true,
-            data: result
+            data: result,
+            pagination
         });
 
     } catch (error) {
