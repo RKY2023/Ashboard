@@ -1,18 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Carousel3D from '../../components/UI/Carousel/Carousel3D';
+import Carousel3D from '../../components/ui/Carousel/Carousel3D';
 
 const Products = () => {
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState<string[]>([]);
 
   const fetchImages = async () => {
     const res = await fetch("https://dummyjson.com/products");
     const data = await res.json();
 
     if (data.products) {
-      let imgArr = [];
-      data.products.forEach((prod) => {
+      let imgArr: string[] = [];
+      data.products.forEach((prod: any) => {
         imgArr.push(prod.thumbnail);
       });
       setImages(imgArr);

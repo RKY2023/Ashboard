@@ -1,4 +1,4 @@
-const home = (props) => {
+const home = () => {
     return (
         <>
         Working

@@ -31,12 +31,19 @@ interface RateLimitResult {
  * Get client IP address from request
  */
 export function getClientIp(req: NextApiRequest): string {
-  return (
-    req.headers['x-forwarded-for']?.split(',')[0] ||
-    req.headers['x-real-ip'] ||
-    req.socket?.remoteAddress ||
-    'unknown'
-  );
+  const xForwardedFor = req.headers['x-forwarded-for'];
+  let ip: string | undefined;
+
+  if (Array.isArray(xForwardedFor)) {
+    ip = xForwardedFor[0];
+  } else if (xForwardedFor) {
+    ip = xForwardedFor.split(',')[0];
+  }
+
+  const xRealIp = req.headers['x-real-ip'];
+  const realIp = Array.isArray(xRealIp) ? xRealIp[0] : xRealIp;
+
+  return (ip || realIp || req.socket?.remoteAddress || 'unknown') as string;
 }
 
 /**

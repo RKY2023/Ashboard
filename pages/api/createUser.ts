@@ -23,12 +23,13 @@ async function createUser(
         const rateLimit = await checkRegisterRateLimit(clientIp);
 
         if (!rateLimit.allowed) {
+            res.setHeader('Retry-After', rateLimit.retryAfter || 0);
             return res.status(429).json({
                 success: false,
                 error: {
                     msg: `Too many registration attempts. Please try again in ${rateLimit.retryAfter} seconds`
                 }
-            }).setHeader('Retry-After', rateLimit.retryAfter);
+            });
         }
 
         // Validate input
@@ -76,7 +77,7 @@ async function createUser(
             success: true,
             data: {
                 msg: 'User created successfully',
-                userId: result.insertedId
+                userId: result.insertedId.toString()
             }
         });
 

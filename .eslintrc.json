@@ -1,8 +1,40 @@
 {
   "extends": ["next/core-web-vitals"],
   "rules": {
-    "no-unused-vars": "warn",
-    "no-console": "warn",
-    "react/no-unescaped-entities": "warn"
-  }
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "react/no-unescaped-entities": "warn",
+    "no-unused-vars": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "server/mqtt/**/*.ts",
+        "server/websocket/**/*.ts",
+        "server/jobs/**/*.ts",
+        "src/lib/db/indexes.ts",
+        "src/lib/hooks/useWebSocket.ts"
+      ],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": [
+        "**/*.d.ts",
+        "**/*.types.ts"
+      ],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    },
+    {
+      "files": [
+        "pages/**/*.{js,ts,jsx,tsx}",
+        "components/**/*.{js,ts,jsx,tsx}"
+      ],
+      "rules": {
+        "@next/next/no-img-element": "off"
+      }
+    }
+  ]
 }

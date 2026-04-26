@@ -1,26 +1,18 @@
 import React from 'react';
-import classes from './particle.module.css';
+import styles from './particle.module.css';
 
-function Particle() {
+interface ParticleProps {
+  className?: string;
+}
+
+function Particle({ className }: ParticleProps) {
   return (
-    <div id="particle-container" className=' w-full h-full bg-white'> 
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
-      <div className={`${classes.particle}`}></div>
+    <div className={`${styles.particleContainer} ${className ?? ''}`.trim()}>
+      {Array.from({ length: 15 }, (_, i) => (
+        <div key={i} className={styles.particle} />
+      ))}
     </div>
-  )
+  );
 }
 
 export default Particle;

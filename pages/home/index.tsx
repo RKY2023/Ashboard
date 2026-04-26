@@ -1,15 +1,9 @@
 // import React from "react";
-import Link from "next/link";
 import HomeBody from "./homebody";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowLeft,
-  faTerminal,
-  faVoicemail,
-} from "@fortawesome/free-solid-svg-icons";
-import { faAdn, faFacebook, faLinkedin } from "@fortawesome/free-brands-svg-icons";
+import { faFacebook, faLinkedin } from "@fortawesome/free-brands-svg-icons";
 import classes from "./index.module.css";
-import Header from "@/components/UI/Header/Header";
+import Header from "@/components/ui/Header/Header";
 
 function home() {
   return (
@@ -35,7 +29,7 @@ function home() {
       </section>
       <footer className={classes["footer"]}>
         <div className={classes["footer-body"]}>
-          <div className={classes[("footer-logo", "logo")]}>
+          <div className={classes["footer-logo"]}>
             <i className="fas fa-gamepad"></i>
             <h1>Ashboard</h1>
           </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const Header = (props) => {
+const Header = () => {
     return (
         <header className="border-b border-gray-200 bg-white">
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">

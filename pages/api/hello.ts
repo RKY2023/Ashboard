@@ -25,12 +25,13 @@ async function myapi(
         const rateLimit = await checkDefaultRateLimit(clientIp);
 
         if (!rateLimit.allowed) {
+            res.setHeader('Retry-After', rateLimit.retryAfter || 0);
             return res.status(429).json({
                 success: false,
                 error: {
                     msg: `Too many requests. Please try again in ${rateLimit.retryAfter} seconds`
                 }
-            }).setHeader('Retry-After', rateLimit.retryAfter);
+            });
         }
 
         const data = req.body;
@@ -60,7 +61,7 @@ async function myapi(
             success: true,
             data: {
                 msg: 'Meetup created successfully',
-                insertedId: result.insertedId
+                insertedId: result.insertedId.toString()
             }
         });
 

@@ -1,5 +1,5 @@
 import React from "react";
-export const SearchIcon = (props) => (
+export const SearchIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     aria-hidden="true"
     fill="none"

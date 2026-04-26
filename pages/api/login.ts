@@ -23,12 +23,13 @@ async function login(
         const rateLimit = await checkLoginRateLimit(clientIp);
 
         if (!rateLimit.allowed) {
+            res.setHeader('Retry-After', rateLimit.retryAfter || 0);
             return res.status(429).json({
                 success: false,
                 error: {
                     msg: `Too many login attempts. Please try again in ${rateLimit.retryAfter} seconds`
                 }
-            }).setHeader('Retry-After', rateLimit.retryAfter);
+            });
         }
 
         // Validate input
@@ -66,7 +67,7 @@ async function login(
             data: {
                 msg: 'Login successful',
                 user: {
-                    id: user._id,
+                    _id: user._id ? user._id.toString() : undefined,
                     name: user.name,
                     email: user.email,
                     phoneno: user.phoneno
