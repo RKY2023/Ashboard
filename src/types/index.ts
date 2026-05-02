@@ -183,6 +183,16 @@ export interface Session extends BaseDocument {
   isActive: boolean;
 }
 
+// Password reset token types
+export interface PasswordResetToken extends BaseDocument {
+  userId: ObjectId;
+  tokenHash: string;
+  expiresAt: Date;
+  usedAt?: Date;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
 // Audit log types
 export interface AuditLog extends BaseDocument {
   userId: ObjectId;

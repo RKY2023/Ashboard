@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
@@ -12,14 +13,22 @@ import {
   getHouseholdsCollection,
   getHouseholdMembersCollection,
   getSessionsCollection,
+  getPasswordResetTokensCollection,
 } from '@/src/lib/db';
+import { sendPasswordResetEmail } from '@/src/lib/email';
 import { auditHelpers } from '@/src/lib/db/audit';
 import {
   generateTokenPair,
   verifyRefreshToken,
   extractTokenFromHeader,
 } from '@/src/lib/auth';
-import { ROLE_PERMISSIONS, HouseholdSettings, User, Session } from '@/src/types';
+import {
+  ROLE_PERMISSIONS,
+  HouseholdSettings,
+  User,
+  Session,
+  PasswordResetToken,
+} from '@/src/types';
 
 // Schemas
 const refreshTokenSchema = z.object({
@@ -29,6 +38,29 @@ const refreshTokenSchema = z.object({
 const selectHouseholdSchema = z.object({
   householdId: z.string().min(1),
 });
+
+const requestPasswordResetSchema = z.object({
+  email: z.string().email().toLowerCase().trim(),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: userRegistrationSchema.shape.password,
+});
+
+// Reset tokens are short-lived (30 minutes). The raw token is sent in the
+// email; only the SHA-256 hash is stored, so a DB leak doesn't yield a usable
+// reset link.
+const RESET_TOKEN_TTL_MINUTES = 30;
+
+function hashResetToken(rawToken: string): string {
+  return crypto.createHash('sha256').update(rawToken).digest('hex');
+}
+
+function buildResetUrl(rawToken: string): string {
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  return `${base.replace(/\/+$/, '')}/reset-password?token=${encodeURIComponent(rawToken)}`;
+}
 
 const createHouseholdSchema = z.object({
   name: z.string().min(2).max(100),
@@ -299,6 +331,130 @@ export const authRouter = router({
         refreshToken: tokens.refreshToken,
         expiresAt: tokens.accessExpiresAt.toISOString(),
       };
+    }),
+
+  /**
+   * Request a password reset link via email.
+   *
+   * Always returns the same generic response regardless of whether the email
+   * exists, so that callers cannot enumerate accounts. Email-send failures are
+   * logged server-side but not surfaced.
+   */
+  requestPasswordReset: loginProcedure
+    .input(requestPasswordResetSchema)
+    .mutation(async ({ input, ctx }) => {
+      const { email } = input;
+
+      const users = await getUsersCollection();
+      const user = await users.findOne({ email, isActive: true });
+
+      if (user) {
+        try {
+          const tokens = await getPasswordResetTokensCollection();
+          const rawToken = crypto.randomBytes(32).toString('base64url');
+          const now = new Date();
+          const expiresAt = new Date(
+            now.getTime() + RESET_TOKEN_TTL_MINUTES * 60_000
+          );
+
+          await tokens.insertOne({
+            userId: user._id,
+            tokenHash: hashResetToken(rawToken),
+            expiresAt,
+            ipAddress: ctx.clientIp,
+            userAgent: ctx.req.headers['user-agent'],
+            createdAt: now,
+            updatedAt: now,
+          } as PasswordResetToken);
+
+          const resetUrl = buildResetUrl(rawToken);
+
+          try {
+            await sendPasswordResetEmail({
+              to: user.email,
+              name: user.name,
+              resetUrl,
+              expiresInMinutes: RESET_TOKEN_TTL_MINUTES,
+            });
+          } catch (sendErr) {
+            console.error(
+              '[auth.requestPasswordReset] email delivery failed',
+              sendErr
+            );
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn(
+                `[auth.requestPasswordReset] dev fallback — reset URL: ${resetUrl}`
+              );
+            }
+          }
+        } catch (err) {
+          console.error(
+            '[auth.requestPasswordReset] failed to issue reset token',
+            err
+          );
+        }
+      }
+
+      return {
+        msg: 'If an account exists for that email, a reset link has been sent.',
+      };
+    }),
+
+  /**
+   * Complete a password reset using the token from the emailed link.
+   *
+   * Verifies the hashed token, replaces the user's password, marks the token
+   * used, and invalidates all of that user's sessions so a stolen session
+   * cannot outlive the reset.
+   */
+  resetPassword: loginProcedure
+    .input(resetPasswordSchema)
+    .mutation(async ({ input }) => {
+      const { token, password } = input;
+      const tokenHash = hashResetToken(token);
+      const now = new Date();
+
+      const tokens = await getPasswordResetTokensCollection();
+      const record = await tokens.findOne({ tokenHash });
+
+      if (!record || record.usedAt || record.expiresAt <= now) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'This reset link is invalid or has expired.',
+        });
+      }
+
+      const users = await getUsersCollection();
+      const user = await users.findOne({ _id: record.userId, isActive: true });
+
+      if (!user) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'This reset link is invalid or has expired.',
+        });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 12);
+
+      await users.updateOne(
+        { _id: user._id },
+        { $set: { passwordHash, updatedAt: now } }
+      );
+
+      await tokens.updateOne(
+        { _id: record._id },
+        { $set: { usedAt: now, updatedAt: now } }
+      );
+
+      // Invalidate all existing sessions — anything issued before the reset
+      // should not survive it.
+      const sessions = await getSessionsCollection();
+      await sessions.updateMany(
+        { userId: user._id, isActive: true },
+        { $set: { isActive: false, updatedAt: now } }
+      );
+
+      return { msg: 'Password updated. You can now sign in.' };
     }),
 
   /**

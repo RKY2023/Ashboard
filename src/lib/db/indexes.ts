@@ -38,6 +38,13 @@ export async function ensureIndexes(): Promise<void> {
     { key: { expiresAt: 1 }, expireAfterSeconds: 0 }, // TTL index
   ]);
 
+  // Password reset tokens (TTL clears expired tokens automatically)
+  await db.collection(COLLECTIONS.passwordResetTokens).createIndexes([
+    { key: { tokenHash: 1 }, unique: true },
+    { key: { userId: 1 } },
+    { key: { expiresAt: 1 }, expireAfterSeconds: 0 },
+  ]);
+
   // Audit logs indexes
   await db.collection(COLLECTIONS.auditLogs).createIndexes([
     { key: { householdId: 1, createdAt: -1 } },
