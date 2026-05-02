@@ -34,12 +34,25 @@ export type SubscriptionTier = 'free' | 'basic' | 'premium' | 'enterprise';
 // User and RBAC types
 export interface User extends BaseDocument {
   email: string;
-  passwordHash: string;
+  // Optional: OAuth-only users (Google / GitHub) have no password.
+  passwordHash?: string;
   name: string;
   phone?: string;
   avatar?: string;
   isEmailVerified: boolean;
   lastLoginAt?: Date;
+  isActive: boolean;
+}
+
+// OAuth account linking
+export type OAuthProvider = 'google' | 'github';
+
+export interface OAuthAccount extends BaseDocument {
+  userId: ObjectId;
+  provider: OAuthProvider;
+  providerAccountId: string; // 'sub' for Google, 'id' for GitHub
+  email: string;
+  emailVerified: boolean;
   isActive: boolean;
 }
 

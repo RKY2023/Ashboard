@@ -13,6 +13,16 @@ Multi-tenant authentication, RBAC, household management, and the App Router shel
 - `server/trpc/routers/auth.ts` — login, register, refresh, logout, **`requestPasswordReset`**, **`resetPassword`**, and the secret-gated **`checkEmailExists`** debug procedure.
 - `pages/api/panel.ts` — tRPC panel for browsing the API in dev.
 
+### OAuth (Google + GitHub)
+- `src/lib/auth/oauth.ts` — `arctic` client factories (env-gated) + `findOrCreateUserFromOAuth(profile)` which handles the lookup chain: `oauth_accounts` by `(provider, providerAccountId)` → users by email (only when the provider reports `email_verified=true`) → fresh user with no `passwordHash` and no household.
+- `src/app/api/auth/oauth/[provider]/start/route.ts` — generates state + (Google) PKCE verifier, stashes both as HttpOnly+Secure+SameSite=Lax cookies (10-min TTL), redirects to provider.
+- `src/app/api/auth/oauth/[provider]/callback/route.ts` — verifies state cookie, exchanges code, fetches userinfo, calls the find-or-create helper, mints the same JWT pair `auth.login` does, writes `sessions` + audit log, then redirects to `/auth/oauth/finish#token=...&refreshToken=...`. Tokens travel in the URL hash so they don't appear in server logs or Referer headers.
+- `src/app/auth/oauth/finish/page.tsx` — client-only; reads tokens from the hash, persists to `localStorage`, hard-navigates to `/dashboard` so `AuthProvider` re-runs its mount effect.
+- `oauth_accounts` collection — compound unique `(provider, providerAccountId)` is the primary lookup; secondary `userId` index for "list a user's connected providers".
+- `User.passwordHash` is now optional. `auth.login` short-circuits for users without one ("Invalid email or password") so OAuth-only accounts can't be enumerated by trying password login.
+- GitHub flow falls back to `/user/emails` when `/user.email` is null and refuses if no verified primary email exists. Google's `email_verified` is trusted directly.
+- Buttons on `/login` and `/register` are gated on `NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED` / `NEXT_PUBLIC_OAUTH_GITHUB_ENABLED`. Server-side, the start route also 404s if the secrets aren't set, so a stale flag doesn't expose a broken flow.
+
 ### Password reset
 - `src/app/(auth)/forgot-password/page.tsx` — request form → "check your email" success state.
 - `src/app/(auth)/reset-password/page.tsx` — reads `?token=` from URL, password + confirm form, redirects to `/login` on success.
@@ -72,12 +82,15 @@ Routers gate every procedure with `withPermission('<resource>:<action>')`.
 ## Critical files
 
 ```
-src/lib/auth/{jwt,permissions,AuthProvider}.ts
+src/lib/auth/{jwt,permissions,AuthProvider,oauth}.ts
 src/lib/db/{collections,indexes,audit}.ts
 src/lib/email/index.ts
 server/trpc/middleware/auth.ts
 server/trpc/routers/{auth,households,users}.ts
+src/app/api/auth/oauth/[provider]/{start,callback}/route.ts
+src/app/auth/oauth/finish/page.tsx
 src/app/(auth)/{login,register,forgot-password,reset-password}/page.tsx
+src/components/auth/OAuthButtons.tsx
 src/app/(dashboard)/layout.tsx
 src/components/layouts/{Sidebar,Header,DashboardLayout}.tsx
 ```

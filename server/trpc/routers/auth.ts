@@ -227,7 +227,9 @@ export const authRouter = router({
       // Find user by email
       const user = await users.findOne({ email, isActive: true });
 
-      if (!user) {
+      if (!user || !user.passwordHash) {
+        // OAuth-only users (no passwordHash) hit the same generic error so we
+        // don't leak which accounts have a password and which don't.
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: 'Invalid email or password',

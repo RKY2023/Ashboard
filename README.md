@@ -163,6 +163,16 @@ RESEND_FROM_EMAIL=Ashboard <noreply@yourdomain.com>
 
 # Optional: gates auth.checkEmailExists debug procedure
 # DEBUG_TOKEN=some-shared-secret
+
+# OAuth — Google (callback: <APP_URL>/api/auth/oauth/google/callback)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=false
+
+# OAuth — GitHub (callback: <APP_URL>/api/auth/oauth/github/callback)
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=false
 ```
 
 > **Don't set `NODE_ENV` yourself.** Next.js/Vercel manage it (`development` for `next dev`, `production` for builds). Setting it manually triggers a Vercel warning.
@@ -230,6 +240,7 @@ The Socket.io server authenticates via the same JWT used for tRPC, scopes broadc
 
 - Password hashing with bcryptjs (cost 12)
 - JWT access + refresh tokens (jose)
+- **OAuth login** — Google + GitHub via `arctic`, state cookies + PKCE (Google), email-verified auto-link, hash-fragment token delivery, refuses takeover when provider hasn't verified the email
 - **Password reset** — single-use SHA-256-hashed tokens with 30-min TTL, email link via Resend, generic response prevents account enumeration, successful reset invalidates all of that user's sessions
 - Multi-tenant isolation: every collection query is scoped by `householdId`
 - Rate limiting via `rate-limiter-flexible`

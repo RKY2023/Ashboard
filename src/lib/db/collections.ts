@@ -6,6 +6,7 @@ import {
   HouseholdMember,
   Session,
   PasswordResetToken,
+  OAuthAccount,
   AuditLog,
   Device,
   DeviceHistory,
@@ -47,6 +48,7 @@ export const COLLECTIONS = {
   householdMembers: 'household_members',
   sessions: 'sessions',
   passwordResetTokens: 'password_reset_tokens',
+  oauthAccounts: 'oauth_accounts',
   auditLogs: 'audit_logs',
 
   // Devices & Automation
@@ -136,6 +138,11 @@ export async function getAuditLogsCollection(): Promise<Collection<AuditLog>> {
 export async function getPasswordResetTokensCollection(): Promise<Collection<PasswordResetToken>> {
   const database = await getDb();
   return database.collection<PasswordResetToken>(COLLECTIONS.passwordResetTokens);
+}
+
+export async function getOAuthAccountsCollection(): Promise<Collection<OAuthAccount>> {
+  const database = await getDb();
+  return database.collection<OAuthAccount>(COLLECTIONS.oauthAccounts);
 }
 
 // Device collections

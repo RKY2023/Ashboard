@@ -45,6 +45,12 @@ export async function ensureIndexes(): Promise<void> {
     { key: { expiresAt: 1 }, expireAfterSeconds: 0 },
   ]);
 
+  // OAuth account linking
+  await db.collection(COLLECTIONS.oauthAccounts).createIndexes([
+    { key: { provider: 1, providerAccountId: 1 }, unique: true },
+    { key: { userId: 1 } },
+  ]);
+
   // Audit logs indexes
   await db.collection(COLLECTIONS.auditLogs).createIndexes([
     { key: { householdId: 1, createdAt: -1 } },

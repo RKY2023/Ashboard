@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { useAuth } from '@/src/lib/auth/AuthProvider';
 import { Loader2, Eye, EyeOff, Check } from 'lucide-react';
 import { AshboardLogo } from '@/src/components/brand/AshboardLogo';
+import { OAuthButtons } from '@/src/components/auth/OAuthButtons';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(50),
@@ -251,6 +252,8 @@ export default function RegisterPage() {
               )}
             </button>
           </form>
+
+          <OAuthButtons />
 
           {/* Terms */}
           <p className="text-xs text-muted-foreground text-center mt-4">
