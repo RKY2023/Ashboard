@@ -10,6 +10,12 @@ import {
 } from '@/src/lib/db';
 import { auditHelpers } from '@/src/lib/db/audit';
 import { AuthContext } from '@/src/types';
+import {
+  RECIPE_LIBRARY,
+  CATEGORY_LABEL,
+  type LibraryCategory,
+} from '@/src/data/recipe-library';
+import { compareInPantry, convert } from '@/src/lib/units';
 
 const ingredientSchema = z.object({
   name: z.string().min(1).max(120),
@@ -270,8 +276,9 @@ export const recipesRouter = router({
     }),
 
   /**
-   * "What can I cook?" — match recipes against current pantry contents
-   * Returns recipes ranked by ingredient match coverage.
+   * "What can I cook?" — match recipes against current pantry contents,
+   * accounting for ingredient quantities and unit conversions. Returns
+   * recipes ranked by share of fully-satisfied required ingredients.
    */
   matching: withPermission('recipes:read')
     .input(
@@ -288,8 +295,8 @@ export const recipesRouter = router({
       const pantry = await groceries
         .find({ householdId: auth.householdId, quantity: { $gt: 0 } })
         .toArray();
-      const pantryNames = new Set(
-        pantry.map((p) => p.name.toLowerCase().trim())
+      const pantryByName = new Map(
+        pantry.map((p) => [p.name.toLowerCase().trim(), p])
       );
 
       const all = await recipes
@@ -299,20 +306,35 @@ export const recipesRouter = router({
       const ranked = all
         .map((r) => {
           const required = r.ingredients.filter((i) => !i.optional);
-          const matches = required.filter((i) =>
-            pantryNames.has(i.name.toLowerCase().trim())
-          );
+          const missing: { name: string; quantity: number; unit: string; reason: 'absent' | 'short' | 'incompatible' }[] = [];
+          let satisfied = 0;
+
+          for (const ing of required) {
+            const stock = pantryByName.get(ing.name.toLowerCase().trim());
+            if (!stock) {
+              missing.push({ name: ing.name, quantity: ing.quantity, unit: ing.unit, reason: 'absent' });
+              continue;
+            }
+            const cmp = compareInPantry(ing.quantity, ing.unit, stock.quantity, stock.unit);
+            if (cmp.hasEnough) {
+              satisfied++;
+              continue;
+            }
+            if (cmp.incompatible) {
+              missing.push({ name: ing.name, quantity: ing.quantity, unit: ing.unit, reason: 'incompatible' });
+            } else if (cmp.shortfall) {
+              missing.push({
+                name: ing.name,
+                quantity: cmp.shortfall.quantity,
+                unit: cmp.shortfall.unit,
+                reason: 'short',
+              });
+            }
+          }
+
           const matchPct =
-            required.length === 0
-              ? 100
-              : (matches.length / required.length) * 100;
-          const missing = required
-            .filter((i) => !pantryNames.has(i.name.toLowerCase().trim()))
-            .map((i) => ({
-              name: i.name,
-              quantity: i.quantity,
-              unit: i.unit,
-            }));
+            required.length === 0 ? 100 : (satisfied / required.length) * 100;
+
           return {
             _id: r._id.toString(),
             name: r.name,
@@ -323,6 +345,7 @@ export const recipesRouter = router({
             cookTime: r.cookTime,
             imageUrl: r.imageUrl,
             matchPct: Math.round(matchPct),
+            canCook: missing.length === 0,
             missing,
           };
         })
@@ -334,7 +357,8 @@ export const recipesRouter = router({
     }),
 
   /**
-   * Generate a shopping list of missing ingredients for a recipe
+   * Generate a shopping list of ingredients the pantry can't currently
+   * satisfy. Quantities are expressed as the shortfall in the recipe's unit.
    */
   missingIngredients: withPermission('recipes:read')
     .input(z.object({ recipeId: z.string() }))
@@ -358,17 +382,148 @@ export const recipesRouter = router({
         pantry.map((p) => [p.name.toLowerCase().trim(), p])
       );
 
-      return recipe.ingredients
-        .filter((ing) => {
-          const stock = pantryByName.get(ing.name.toLowerCase().trim());
-          return !stock || stock.quantity < ing.quantity;
-        })
-        .map((ing) => ({
-          name: ing.name,
-          quantity: ing.quantity,
-          unit: ing.unit,
-          category: 'pantry',
-        }));
+      const missing: {
+        name: string;
+        quantity: number;
+        unit: string;
+        category: string;
+        reason: 'absent' | 'short' | 'incompatible';
+      }[] = [];
+
+      for (const ing of recipe.ingredients) {
+        const stock = pantryByName.get(ing.name.toLowerCase().trim());
+        if (!stock) {
+          missing.push({
+            name: ing.name,
+            quantity: ing.quantity,
+            unit: ing.unit,
+            category: 'pantry',
+            reason: 'absent',
+          });
+          continue;
+        }
+        const cmp = compareInPantry(ing.quantity, ing.unit, stock.quantity, stock.unit);
+        if (cmp.hasEnough) continue;
+        if (cmp.incompatible) {
+          missing.push({
+            name: ing.name,
+            quantity: ing.quantity,
+            unit: ing.unit,
+            category: 'pantry',
+            reason: 'incompatible',
+          });
+        } else if (cmp.shortfall) {
+          missing.push({
+            name: ing.name,
+            quantity: cmp.shortfall.quantity,
+            unit: cmp.shortfall.unit,
+            category: 'pantry',
+            reason: 'short',
+          });
+        }
+      }
+
+      return missing;
+    }),
+
+  /**
+   * Cook a recipe — validate every required ingredient is in stock (with
+   * unit conversion) then deduct from pantry. Optional ingredients are
+   * deducted only when present; missing optional ingredients don't block.
+   *
+   * Validation runs first so a cook either fully succeeds or refuses; the
+   * decrement loop is best-effort serial — concurrent cooks of the same
+   * recipe can produce a partial deduction in the worst case.
+   */
+  cook: withPermission('recipes:write')
+    .input(z.object({ recipeId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const auth = (ctx as unknown as { auth: AuthContext }).auth;
+      const recipes = await getRecipesCollection();
+      const groceries = await getGroceriesCollection();
+
+      const recipe = await recipes.findOne({
+        _id: new ObjectId(input.recipeId),
+        householdId: auth.householdId,
+      });
+      if (!recipe) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Recipe not found' });
+      }
+
+      const pantry = await groceries
+        .find({ householdId: auth.householdId })
+        .toArray();
+      const pantryByName = new Map(
+        pantry.map((p) => [p.name.toLowerCase().trim(), p])
+      );
+
+      type Plan = { pantryItemId: ObjectId; deductInPantryUnit: number };
+      const plan: Plan[] = [];
+      const blockers: string[] = [];
+
+      for (const ing of recipe.ingredients) {
+        const stock = pantryByName.get(ing.name.toLowerCase().trim());
+        if (!stock) {
+          if (!ing.optional) blockers.push(`missing ${ing.name}`);
+          continue;
+        }
+        const cmp = compareInPantry(ing.quantity, ing.unit, stock.quantity, stock.unit);
+        if (cmp.incompatible) {
+          if (!ing.optional) blockers.push(`incompatible units for ${ing.name} (${ing.unit} vs ${stock.unit})`);
+          continue;
+        }
+        if (!cmp.hasEnough) {
+          if (!ing.optional) {
+            const sf = cmp.shortfall!;
+            blockers.push(`need ${sf.quantity.toFixed(1)} more ${sf.unit} of ${ing.name}`);
+          }
+          continue;
+        }
+        const deduct = convert(ing.quantity, ing.unit, stock.unit);
+        if (deduct === null) {
+          if (!ing.optional) blockers.push(`can't convert ${ing.name}`);
+          continue;
+        }
+        plan.push({ pantryItemId: stock._id, deductInPantryUnit: deduct });
+      }
+
+      if (blockers.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Can't cook: ${blockers.join('; ')}`,
+        });
+      }
+
+      let deducted = 0;
+      for (const step of plan) {
+        const result = await groceries.findOneAndUpdate(
+          {
+            _id: step.pantryItemId,
+            householdId: auth.householdId,
+            quantity: { $gte: step.deductInPantryUnit },
+          } as never,
+          {
+            $inc: { quantity: -step.deductInPantryUnit },
+            $set: { updatedAt: new Date() },
+          }
+        );
+        const ok = (result as unknown as { value?: unknown } | null)?.value
+          ?? (result as unknown as { _id?: unknown } | null);
+        if (ok) deducted++;
+      }
+
+      await auditHelpers.logUpdate(
+        auth.userId,
+        auth.householdId!,
+        'recipe',
+        recipe._id,
+        { cooked: true, ingredientsDeducted: deducted }
+      );
+
+      return {
+        msg: 'Recipe cooked',
+        ingredientsDeducted: deducted,
+      };
     }),
 
   /**
@@ -456,6 +611,150 @@ export const recipesRouter = router({
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Plan not found' });
         }
         return { msg: 'Plan removed' };
+      }),
+  }),
+
+  /**
+   * Curated recipe library — read-only catalog shipped with the app.
+   * Sourced from `src/data/recipe-library.ts`. Users can browse and
+   * import recipes into their household with `library.import`.
+   */
+  library: router({
+    list: withPermission('recipes:read')
+      .input(
+        z
+          .object({
+            category: z.string().optional(),
+            search: z.string().optional(),
+          })
+          .optional()
+      )
+      .query(({ input }) => {
+        const search = input?.search?.toLowerCase().trim();
+        const category = input?.category as LibraryCategory | undefined;
+        const items = RECIPE_LIBRARY.filter((r) => {
+          if (category && r.category !== category) return false;
+          if (search) {
+            const hay = (
+              r.name +
+              ' ' +
+              r.tags.join(' ') +
+              ' ' +
+              (r.description ?? '')
+            ).toLowerCase();
+            if (!hay.includes(search)) return false;
+          }
+          return true;
+        });
+        return {
+          categories: (
+            Object.keys(CATEGORY_LABEL) as LibraryCategory[]
+          ).map((key) => ({
+            key,
+            label: CATEGORY_LABEL[key],
+            count: RECIPE_LIBRARY.filter((r) => r.category === key).length,
+          })),
+          items: items.map((r) => ({
+            id: r.id,
+            name: r.name,
+            category: r.category,
+            categoryLabel: CATEGORY_LABEL[r.category],
+            cuisine: r.cuisine,
+            servings: r.servings,
+            prepTime: r.prepTime,
+            cookTime: r.cookTime,
+            difficulty: r.difficulty,
+            tags: r.tags,
+            ingredientCount: r.ingredients.length,
+            sourceUrl: r.sourceUrl,
+          })),
+        };
+      }),
+
+    get: withPermission('recipes:read')
+      .input(z.object({ id: z.string() }))
+      .query(({ input }) => {
+        const recipe = RECIPE_LIBRARY.find((r) => r.id === input.id);
+        if (!recipe) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Library recipe not found',
+          });
+        }
+        return {
+          ...recipe,
+          categoryLabel: CATEGORY_LABEL[recipe.category],
+        };
+      }),
+
+    /**
+     * Import a curated library recipe into the user's household recipes.
+     * Skips silently if a recipe with the same name already exists.
+     */
+    import: withPermission('recipes:write')
+      .input(z.object({ ids: z.array(z.string()).min(1) }))
+      .mutation(async ({ input, ctx }) => {
+        const auth = (ctx as unknown as { auth: AuthContext }).auth;
+        const recipes = await getRecipesCollection();
+        const now = new Date();
+
+        const existingNames = new Set(
+          (
+            await recipes
+              .find(
+                { householdId: auth.householdId },
+                { projection: { name: 1 } }
+              )
+              .toArray()
+          ).map((r) => r.name.toLowerCase().trim())
+        );
+
+        const toInsert = input.ids
+          .map((id) => RECIPE_LIBRARY.find((r) => r.id === id))
+          .filter((r): r is (typeof RECIPE_LIBRARY)[number] => Boolean(r))
+          .filter((r) => !existingNames.has(r.name.toLowerCase().trim()))
+          .map((r) => ({
+            householdId: auth.householdId!,
+            name: r.name,
+            description: r.description,
+            servings: r.servings,
+            prepTime: r.prepTime,
+            cookTime: r.cookTime,
+            ingredients: r.ingredients.map((i) => ({
+              name: i.name,
+              quantity: i.quantity,
+              unit: i.unit,
+              optional: i.optional ?? false,
+            })),
+            instructions: r.instructions,
+            tags: [...r.tags, r.category],
+            cuisine: r.cuisine,
+            difficulty: r.difficulty,
+            sourceUrl: r.sourceUrl,
+            isFavorite: false,
+            createdAt: now,
+            updatedAt: now,
+          }));
+
+        if (toInsert.length === 0) {
+          return { imported: 0, skipped: input.ids.length };
+        }
+
+        const result = await recipes.insertMany(toInsert as never);
+        for (const id of Object.values(result.insertedIds)) {
+          await auditHelpers.logCreate(
+            auth.userId,
+            auth.householdId!,
+            'recipe',
+            id as ObjectId,
+            { source: 'library' }
+          );
+        }
+
+        return {
+          imported: toInsert.length,
+          skipped: input.ids.length - toInsert.length,
+        };
       }),
   }),
 });

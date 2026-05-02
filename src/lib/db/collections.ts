@@ -30,6 +30,12 @@ import {
   RecurringPayment,
   Notification,
   Integration,
+  Camera,
+  AccessLogEntry,
+  InventoryItem,
+  MaintenanceTask,
+  Webhook,
+  VoiceIntent,
 } from '@/src/types';
 
 // Collection names
@@ -82,6 +88,7 @@ export const COLLECTIONS = {
   // System
   integrations: 'integrations',
   webhooks: 'webhooks',
+  voiceIntents: 'voice_intents',
   notifications: 'notifications',
   alertRules: 'alert_rules',
   inventory: 'inventory',
@@ -249,6 +256,39 @@ export async function getNotificationsCollection(): Promise<Collection<Notificat
 export async function getIntegrationsCollection(): Promise<Collection<Integration>> {
   const database = await getDb();
   return database.collection<Integration>(COLLECTIONS.integrations);
+}
+
+// Camera & access-log collections
+export async function getCamerasCollection(): Promise<Collection<Camera>> {
+  const database = await getDb();
+  return database.collection<Camera>(COLLECTIONS.cameras);
+}
+
+export async function getAccessLogsCollection(): Promise<Collection<AccessLogEntry>> {
+  const database = await getDb();
+  return database.collection<AccessLogEntry>(COLLECTIONS.accessLogs);
+}
+
+// Inventory & maintenance collections
+export async function getInventoryCollection(): Promise<Collection<InventoryItem>> {
+  const database = await getDb();
+  return database.collection<InventoryItem>(COLLECTIONS.inventory);
+}
+
+export async function getMaintenanceTasksCollection(): Promise<Collection<MaintenanceTask>> {
+  const database = await getDb();
+  return database.collection<MaintenanceTask>(COLLECTIONS.maintenanceTasks);
+}
+
+// Integration collections
+export async function getWebhooksCollection(): Promise<Collection<Webhook>> {
+  const database = await getDb();
+  return database.collection<Webhook>(COLLECTIONS.webhooks);
+}
+
+export async function getVoiceIntentsCollection(): Promise<Collection<VoiceIntent>> {
+  const database = await getDb();
+  return database.collection<VoiceIntent>(COLLECTIONS.voiceIntents);
 }
 
 // Helper for multi-tenant queries

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Particle from '@/components/ui/Section/particle';
+import { Particle } from '@/src/components/effects/Particle';
 import { AshboardLogo } from '@/src/components/brand/AshboardLogo';
 import {
   Lightbulb,

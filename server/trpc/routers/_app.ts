@@ -14,26 +14,11 @@ import { financeRouter } from './finance';
 import { climateRouter } from './climate';
 import { notificationsRouter } from './notifications';
 import { reportsRouter } from './reports';
-import { meetupsRouter } from './meetups';
 import { groceriesRouter } from './groceries';
 import { recipesRouter } from './recipes';
-import { ipaddressesRouter } from './ipaddresses';
+import { inventoryRouter } from './inventory';
+import { integrationsRouter } from './integrations';
 
-/**
- * Root router that merges all sub-routers
- *
- * Structure:
- * - auth: Authentication (login, register, refresh, logout)
- * - health: Health check endpoints
- * - households: Household management (CRUD, settings)
- * - users: User management within households (RBAC)
- * - devices: Device management (CRUD, control, state)
- * - rooms: Room management
- * - meetups: Legacy meetups data
- * - groceries: Legacy groceries data
- * - recipes: Legacy recipes data
- * - ipaddresses: Legacy IP address data
- */
 export const appRouter = router({
   // Core
   auth: authRouter,
@@ -50,25 +35,29 @@ export const appRouter = router({
   scenes: scenesRouter,
   schedules: schedulesRouter,
 
-  // Phase 4 - Energy & Security
+  // Energy & Security
   energy: energyRouter,
   security: securityRouter,
 
-  // Phase 6 - Finance
+  // Finance
   finance: financeRouter,
 
-  // Phase 7 - Climate & Notifications
+  // Climate & Notifications
   climate: climateRouter,
   notifications: notificationsRouter,
 
-  // Phase 8 - Reporting
+  // Reporting
   reports: reportsRouter,
 
-  // Legacy (to be migrated)
-  meetups: meetupsRouter,
+  // Grocery & Recipes (ERP-style — rewritten in place)
   groceries: groceriesRouter,
   recipes: recipesRouter,
-  ipaddresses: ipaddressesRouter,
+
+  // Inventory & Maintenance
+  inventory: inventoryRouter,
+
+  // Integration Hub
+  integrations: integrationsRouter,
 });
 
 /**

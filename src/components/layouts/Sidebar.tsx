@@ -17,6 +17,8 @@ import {
   Users,
   Settings,
   BarChart3,
+  Wrench,
+  Webhook,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -86,6 +88,16 @@ const navItems: NavItem[] = [
     label: 'Finance',
     href: '/dashboard/finance',
     icon: Wallet,
+  },
+  {
+    label: 'Inventory',
+    href: '/dashboard/inventory',
+    icon: Wrench,
+  },
+  {
+    label: 'Integrations',
+    href: '/dashboard/integrations',
+    icon: Webhook,
   },
   {
     label: 'Users',

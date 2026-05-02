@@ -42,12 +42,19 @@ const createNotificationSchema = z.object({
   channels: z.array(channelEnum).default(['app']),
 });
 
+const ruleConditionSchema = z.object({
+  metric: z.string().min(1),
+  op: z.enum(['gt', 'lt', 'gte', 'lte', 'eq', 'ne']),
+  threshold: z.number(),
+});
+
 const upsertRuleSchema = z.object({
   ruleId: z.string().optional(),
   name: z.string().min(1).max(80),
   resourceType: resourceEnum,
-  condition: z.record(z.string(), z.unknown()),
+  condition: ruleConditionSchema,
   channels: z.array(channelEnum).default(['app']),
+  cooldownMinutes: z.number().min(0).max(1440).default(60),
   isEnabled: z.boolean().default(true),
 });
 
@@ -205,7 +212,16 @@ export const notificationsRouter = router({
         condition: r.condition,
         channels: r.channels,
         isEnabled: r.isEnabled,
+        cooldownMinutes: r.cooldownMinutes,
+        lastFiredAt: r.lastFiredAt?.toISOString(),
+        lastEvaluatedAt: r.lastEvaluatedAt?.toISOString(),
+        lastValue: r.lastValue,
       }));
+    }),
+
+    metrics: withPermission('notifications:manage').query(async () => {
+      const { listAvailableMetrics } = await import('@/server/jobs/lib/metrics');
+      return listAvailableMetrics();
     }),
 
     upsert: withPermission('notifications:manage')
@@ -227,6 +243,7 @@ export const notificationsRouter = router({
                 resourceType: input.resourceType,
                 condition: input.condition,
                 channels: input.channels,
+                cooldownMinutes: input.cooldownMinutes,
                 isEnabled: input.isEnabled,
                 updatedAt: now,
               },
@@ -241,6 +258,7 @@ export const notificationsRouter = router({
           resourceType: input.resourceType,
           condition: input.condition,
           channels: input.channels,
+          cooldownMinutes: input.cooldownMinutes,
           isEnabled: input.isEnabled,
           createdAt: now,
           updatedAt: now,

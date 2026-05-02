@@ -17,9 +17,14 @@ import {
   Activity,
   Flame,
   Droplet,
+  KeyRound,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { CamerasTab } from '@/src/components/security/CamerasTab';
+import { AccessLogTab } from '@/src/components/security/AccessLogTab';
+
+type Tab = 'events' | 'cameras' | 'access';
 
 type Severity = 'info' | 'warning' | 'alert' | 'critical';
 
@@ -52,6 +57,7 @@ const eventIcons: Record<string, React.ComponentType<{ className?: string }>> = 
 
 export default function SecurityPage() {
   const [filterAck, setFilterAck] = useState<'all' | 'unack'>('all');
+  const [tab, setTab] = useState<Tab>('events');
 
   const currentMode = trpc.security.currentMode.useQuery();
   const modes = trpc.security.listModes.useQuery();
@@ -182,79 +188,104 @@ export default function SecurityPage() {
         />
       </div>
 
-      <div className="widget">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="widget-title">Event Timeline</h3>
-          <div className="flex gap-1 p-1 bg-accent rounded-lg">
-            {(['all', 'unack'] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilterAck(f)}
-                className={cn(
-                  'px-3 py-1 text-xs font-medium rounded-md capitalize',
-                  filterAck === f ? 'bg-background shadow' : 'hover:bg-background/50'
-                )}
-              >
-                {f === 'unack' ? 'Unacknowledged' : 'All'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {events.isLoading ? (
-          <div className="py-12 flex items-center justify-center text-muted-foreground">
-            <Loader2 className="w-6 h-6 animate-spin" />
-          </div>
-        ) : (events.data?.items.length ?? 0) === 0 ? (
-          <p className="py-12 text-center text-muted-foreground text-sm">
-            No security events recorded.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {events.data!.items.map((e) => {
-              const styles = severityStyles[e.severity as Severity];
-              const EventIcon = eventIcons[e.type] ?? Camera;
-              return (
-                <li
-                  key={e._id}
-                  className="flex items-start gap-3 p-3 rounded-lg border border-border"
-                >
-                  <div className={cn('p-2 rounded-lg', styles.color)}>
-                    <EventIcon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium capitalize">{e.type}</span>
-                      <span
-                        className={cn(
-                          'text-xs px-2 py-0.5 rounded-full font-medium capitalize',
-                          styles.color
-                        )}
-                      >
-                        {e.severity}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{e.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(e.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  {!e.isAcknowledged && (
-                    <button
-                      onClick={() => acknowledge.mutate({ eventId: e._id })}
-                      disabled={acknowledge.isPending}
-                      className="p-2 rounded-lg hover:bg-accent transition-colors"
-                      title="Acknowledge"
-                    >
-                      <Check className="w-4 h-4" />
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
+      <div className="flex gap-1 p-1 bg-accent rounded-lg w-fit">
+        {([
+          { id: 'events', label: 'Events', icon: Bell },
+          { id: 'cameras', label: 'Cameras', icon: Camera },
+          { id: 'access', label: 'Access Log', icon: KeyRound },
+        ] as const).map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={cn(
+              'px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 transition-colors',
+              tab === id ? 'bg-background shadow' : 'hover:bg-background/50'
+            )}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
       </div>
+
+      {tab === 'events' && (
+        <div className="widget">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="widget-title">Event Timeline</h3>
+            <div className="flex gap-1 p-1 bg-accent rounded-lg">
+              {(['all', 'unack'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilterAck(f)}
+                  className={cn(
+                    'px-3 py-1 text-xs font-medium rounded-md capitalize',
+                    filterAck === f ? 'bg-background shadow' : 'hover:bg-background/50'
+                  )}
+                >
+                  {f === 'unack' ? 'Unacknowledged' : 'All'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {events.isLoading ? (
+            <div className="py-12 flex items-center justify-center text-muted-foreground">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+          ) : (events.data?.items.length ?? 0) === 0 ? (
+            <p className="py-12 text-center text-muted-foreground text-sm">
+              No security events recorded.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {events.data!.items.map((e) => {
+                const styles = severityStyles[e.severity as Severity];
+                const EventIcon = eventIcons[e.type] ?? Camera;
+                return (
+                  <li
+                    key={e._id}
+                    className="flex items-start gap-3 p-3 rounded-lg border border-border"
+                  >
+                    <div className={cn('p-2 rounded-lg', styles.color)}>
+                      <EventIcon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium capitalize">{e.type}</span>
+                        <span
+                          className={cn(
+                            'text-xs px-2 py-0.5 rounded-full font-medium capitalize',
+                            styles.color
+                          )}
+                        >
+                          {e.severity}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{e.message}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(e.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                    {!e.isAcknowledged && (
+                      <button
+                        onClick={() => acknowledge.mutate({ eventId: e._id })}
+                        disabled={acknowledge.isPending}
+                        className="p-2 rounded-lg hover:bg-accent transition-colors"
+                        title="Acknowledge"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {tab === 'cameras' && <CamerasTab />}
+      {tab === 'access' && <AccessLogTab />}
     </div>
   );
 }

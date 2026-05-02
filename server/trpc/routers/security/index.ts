@@ -9,6 +9,8 @@ import {
 } from '@/src/lib/db';
 import { auditHelpers } from '@/src/lib/db/audit';
 import { AuthContext } from '@/src/types';
+import { camerasRouter } from './cameras';
+import { accessRouter, recordAccess } from './access';
 
 const eventTypeEnum = z.enum([
   'motion',
@@ -186,6 +188,13 @@ export const securityRouter = router({
         action,
         target.mode
       );
+      await recordAccess({
+        householdId: auth.householdId!,
+        actorId: auth.userId,
+        actorName: auth.user?.name,
+        action,
+        detail: `Mode: ${target.name} (${target.mode})`,
+      });
 
       return { msg: `Activated ${target.name}`, mode: target.mode };
     }),
@@ -210,6 +219,13 @@ export const securityRouter = router({
       'disarm',
       'disarmed'
     );
+    await recordAccess({
+      householdId: auth.householdId!,
+      actorId: auth.userId,
+      actorName: auth.user?.name,
+      action: 'disarm',
+      detail: 'Quick disarm',
+    });
 
     return { msg: 'System disarmed' };
   }),
@@ -348,4 +364,7 @@ export const securityRouter = router({
 
     return { todayCount, unacknowledged: unack, criticalUnacknowledged: criticalUnack };
   }),
+
+  cameras: camerasRouter,
+  access: accessRouter,
 });

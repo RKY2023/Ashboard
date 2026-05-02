@@ -102,7 +102,14 @@ export type Permission =
   | 'settings:write'
   // Reports
   | 'reports:read'
-  | 'reports:export';
+  | 'reports:export'
+  // Inventory & Maintenance
+  | 'inventory:read'
+  | 'inventory:write'
+  | 'inventory:delete'
+  // Integrations
+  | 'integrations:read'
+  | 'integrations:write';
 
 // Default permissions by role
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -119,6 +126,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'users:read', 'users:invite', 'users:manage',
     'settings:read', 'settings:write',
     'reports:read', 'reports:export',
+    'inventory:read', 'inventory:write', 'inventory:delete',
+    'integrations:read', 'integrations:write',
   ],
   admin: [
     'devices:read', 'devices:write', 'devices:control',
@@ -133,6 +142,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'users:read', 'users:invite',
     'settings:read', 'settings:write',
     'reports:read', 'reports:export',
+    'inventory:read', 'inventory:write', 'inventory:delete',
+    'integrations:read', 'integrations:write',
   ],
   member: [
     'devices:read', 'devices:control',
@@ -147,12 +158,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'users:read',
     'settings:read',
     'reports:read',
+    'inventory:read', 'inventory:write',
+    'integrations:read',
   ],
   guest: [
     'devices:read', 'devices:control',
     'security:read',
     'grocery:read',
     'recipes:read',
+    'inventory:read',
   ],
 };
 
@@ -209,7 +223,11 @@ export type ResourceType =
   | 'grocery'
   | 'recipe'
   | 'transaction'
-  | 'budget';
+  | 'budget'
+  | 'inventory'
+  | 'maintenance'
+  | 'webhook'
+  | 'integration';
 
 // Device types
 export type DeviceType =
@@ -425,6 +443,10 @@ export interface AlertRule extends BaseDocument {
   condition: Record<string, unknown>;
   channels: ('app' | 'email' | 'push' | 'sms')[];
   isEnabled: boolean;
+  cooldownMinutes?: number;
+  lastFiredAt?: Date;
+  lastEvaluatedAt?: Date;
+  lastValue?: number;
 }
 
 // Security types
@@ -615,6 +637,62 @@ export interface Notification extends BaseDocument {
   sentAt?: Date;
 }
 
+// Inventory & maintenance types
+export interface InventoryItem extends BaseDocument {
+  householdId: ObjectId;
+  name: string;
+  category?: string;
+  description?: string;
+  serialNumber?: string;
+  modelNumber?: string;
+  manufacturer?: string;
+  purchasedAt?: Date;
+  purchasedPrice?: number;
+  warrantyExpiresAt?: Date;
+  location?: string;
+  roomId?: ObjectId;
+  quantity: number;
+  isActive: boolean;
+}
+
+export type MaintenanceCadence = 'once' | 'monthly' | 'quarterly' | 'semiannual' | 'annual' | 'custom';
+
+export interface MaintenanceTask extends BaseDocument {
+  householdId: ObjectId;
+  inventoryItemId?: ObjectId;
+  name: string;
+  description?: string;
+  cadence: MaintenanceCadence;
+  intervalDays?: number;
+  nextDueAt: Date;
+  lastCompletedAt?: Date;
+  assigneeId?: ObjectId;
+  isComplete: boolean;
+  isActive: boolean;
+}
+
+// Camera & access-log types
+export interface Camera extends BaseDocument {
+  householdId: ObjectId;
+  name: string;
+  hlsUrl: string;
+  snapshotUrl?: string;
+  roomId?: ObjectId;
+  isActive: boolean;
+  lastSeenAt?: Date;
+}
+
+export interface AccessLogEntry extends BaseDocument {
+  householdId: ObjectId;
+  actorId?: ObjectId;
+  actorName?: string;
+  deviceId?: ObjectId;
+  deviceName?: string;
+  action: string;
+  detail?: string;
+  at: Date;
+}
+
 // Integration types
 export interface Integration extends BaseDocument {
   householdId: ObjectId;
@@ -624,6 +702,33 @@ export interface Integration extends BaseDocument {
   credentials?: Record<string, unknown>;
   isConnected: boolean;
   lastSyncAt?: Date;
+}
+
+export type WebhookTargetType = 'automation' | 'scene';
+
+export interface Webhook extends BaseDocument {
+  householdId: ObjectId;
+  name: string;
+  description?: string;
+  secret: string;
+  targetType: WebhookTargetType;
+  targetId: ObjectId;
+  isActive: boolean;
+  lastTriggeredAt?: Date;
+  triggerCount: number;
+}
+
+export type VoiceProvider = 'alexa' | 'google' | 'generic';
+
+export interface VoiceIntent extends BaseDocument {
+  householdId: ObjectId;
+  provider: VoiceProvider;
+  intent: string;
+  targetType: WebhookTargetType;
+  targetId: ObjectId;
+  isActive: boolean;
+  lastTriggeredAt?: Date;
+  triggerCount: number;
 }
 
 // API response types

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { trpc } from '@/src/app/providers';
 import { DeviceList } from '@/src/components/devices/DeviceList';
 import { DeviceDetailModal } from '@/src/components/devices/DeviceDetailModal';
@@ -97,9 +98,11 @@ export default function DevicesPage() {
     });
   };
 
-  // Handle device click
+  const router = useRouter();
+
+  // Handle device click — route to the detail page
   const handleDeviceClick = (device: Device) => {
-    setSelectedDevice(device);
+    router.push(`/dashboard/devices/${device._id}`);
   };
 
   return (

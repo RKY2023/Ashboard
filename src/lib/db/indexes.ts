@@ -99,6 +99,44 @@ export async function ensureIndexes(): Promise<void> {
     { key: { householdId: 1, isActive: 1 } },
   ]);
 
+  // Cameras indexes
+  await db.collection(COLLECTIONS.cameras).createIndexes([
+    { key: { householdId: 1 } },
+    { key: { householdId: 1, isActive: 1 } },
+  ]);
+
+  // Access log indexes
+  await db.collection(COLLECTIONS.accessLogs).createIndexes([
+    { key: { householdId: 1, at: -1 } },
+    { key: { householdId: 1, action: 1 } },
+    { key: { householdId: 1, deviceId: 1 } },
+  ]);
+
+  // Inventory indexes
+  await db.collection(COLLECTIONS.inventory).createIndexes([
+    { key: { householdId: 1, isActive: 1 } },
+    { key: { householdId: 1, category: 1 } },
+    { key: { householdId: 1, warrantyExpiresAt: 1 } },
+  ]);
+
+  // Maintenance task indexes
+  await db.collection(COLLECTIONS.maintenanceTasks).createIndexes([
+    { key: { householdId: 1, isActive: 1, nextDueAt: 1 } },
+    { key: { householdId: 1, inventoryItemId: 1 } },
+    { key: { householdId: 1, isComplete: 1 } },
+  ]);
+
+  // Webhook indexes
+  await db.collection(COLLECTIONS.webhooks).createIndexes([
+    { key: { householdId: 1, isActive: 1 } },
+  ]);
+
+  // Voice intent indexes
+  await db.collection(COLLECTIONS.voiceIntents).createIndexes([
+    { key: { householdId: 1, provider: 1, intent: 1 } },
+    { key: { householdId: 1, isActive: 1 } },
+  ]);
+
   // Groceries indexes
   await db.collection(COLLECTIONS.groceries).createIndexes([
     { key: { householdId: 1 } },

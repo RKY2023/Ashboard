@@ -20,7 +20,10 @@ A `ClimateScheduleEntry` is `{ dayOfWeek (0..6), startTime "HH:mm", targetTemper
 - `markRead(notificationId)` / `markAllRead()` / `delete(notificationId)`
 - `create` — manually push a notification (locked behind `notifications:manage`)
 - Sub-router `rules`:
-  - `list` / `upsert` / `delete` — manage `AlertRule` documents that downstream workers will evaluate
+  - `list` — returns `lastFiredAt`, `lastEvaluatedAt`, `lastValue`, `cooldownMinutes` so the UI can show rule health
+  - `upsert` — typed condition (`{ metric, op: gt|lt|gte|lte|eq|ne, threshold }`) with cooldown
+  - `delete`
+  - `metrics` — returns the available metric names so the rule builder can populate a dropdown
 
 ### Pages
 - `src/app/(dashboard)/dashboard/climate/page.tsx` — zone tiles with current target temp, +/- adjusters, mode selector (off/heat/cool/auto/fan), and a create-zone modal.
@@ -51,8 +54,12 @@ ClimateSchedule {
 AlertRule {
   name,
   resourceType: ResourceType,
-  condition: Record<string, unknown>,
+  condition: { metric: string; op: 'gt'|'lt'|'gte'|'lte'|'eq'|'ne'; threshold: number },
   channels: ('app' | 'email' | 'push' | 'sms')[],
+  cooldownMinutes?: number,
+  lastFiredAt?: Date,
+  lastEvaluatedAt?: Date,
+  lastValue?: number,
   isEnabled
 }
 ```
@@ -74,14 +81,30 @@ Both new permission groups were added to `Permission`, `ROLE_PERMISSIONS`, `PERM
 
 - **Zone references thermostat devices, not the inverse.** A user might have several "smart vents" assigned to one zone; modelling at the zone level matches how people think about HVAC and lets the orchestration logic average targets across the group.
 - **Schedule entries are flat (one row per day-of-week / time)** rather than hierarchical "weekday/weekend" presets — easier to render in a grid, easier to add an exception for one day, no extra normalisation step.
-- **Rules store `condition` as `Record<string, unknown>`** because the trigger semantics for an alert ("battery < 20" vs "expense > $X") differ wildly. The downstream rule evaluator interprets it; the schema doesn't lock us in.
+- **Rules use a small `{ metric, op, threshold }` DSL** so any metric exposed by the registry (`server/jobs/lib/metrics.ts`) can be alerted on without changing the rule schema. Adding a new metric is a one-line entry in `METRICS`.
 - **Notifications are per-user inside a household.** The same security event might generate one notification for the on-call household member but not the others.
+
+## AlertRule evaluator (`pnpm worker`)
+
+`server/jobs/processors/evaluateAlerts.ts` runs once a minute via a BullMQ repeatable job (registered in `worker.ts`). For each enabled rule across all households it:
+
+1. Skips if `now - lastFiredAt < cooldownMinutes` (default 60 minutes).
+2. Loads the metric value from `server/jobs/lib/metrics.ts` (`energy.todayKwh`, `pantry.expiringSoon`, `security.criticalUnack`, …).
+3. Compares with `op`/`threshold` (`server/jobs/lib/evaluateRule.ts`).
+4. If the predicate fires, calls `dispatchNotification()` (`server/notifications/dispatch.ts`) which fans out to every household member via the `app` channel and stubs `email`/`push`/`sms`.
+5. Stamps `lastEvaluatedAt`, `lastValue`, and (on fire) `lastFiredAt` so cooldown takes effect.
+
+Adding a new alert metric is a one-line entry in `METRICS` — the rule builder pulls the list via `notifications.rules.metrics`.
 
 ## Critical files
 
 ```
 server/trpc/routers/climate.ts
 server/trpc/routers/notifications.ts
+server/jobs/lib/{metrics,evaluateRule}.ts
+server/jobs/processors/evaluateAlerts.ts
+server/notifications/dispatch.ts
+server/notifications/channels/{app,stubs}.ts
 src/app/(dashboard)/dashboard/climate/page.tsx
 src/app/(dashboard)/dashboard/notifications/page.tsx
 src/components/layouts/Sidebar.tsx

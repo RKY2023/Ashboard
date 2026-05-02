@@ -128,6 +128,14 @@ export const PERMISSION_GROUPS: Record<string, { label: string; permissions: Per
     label: 'Reports',
     permissions: ['reports:read', 'reports:export'],
   },
+  inventory: {
+    label: 'Inventory',
+    permissions: ['inventory:read', 'inventory:write', 'inventory:delete'],
+  },
+  integrations: {
+    label: 'Integrations',
+    permissions: ['integrations:read', 'integrations:write'],
+  },
 };
 
 /**
@@ -170,6 +178,11 @@ export function getPermissionLabel(permission: Permission): string {
     'settings:write': 'Edit settings',
     'reports:read': 'View reports',
     'reports:export': 'Export reports',
+    'inventory:read': 'View inventory',
+    'inventory:write': 'Edit inventory',
+    'inventory:delete': 'Delete inventory',
+    'integrations:read': 'View integrations',
+    'integrations:write': 'Manage integrations',
   };
   return labels[permission] || permission;
 }

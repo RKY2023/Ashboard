@@ -6,6 +6,8 @@ import { withPermission } from '@/server/trpc/middleware/auth';
 import { getSchedulesCollection, getScenesCollection, getDevicesCollection } from '@/src/lib/db';
 import { auditHelpers } from '@/src/lib/db/audit';
 import { AuthContext } from '@/src/types';
+import { nextRunAt } from '@/server/jobs/lib/nextRunAt';
+import { getScheduleQueue } from '@/server/jobs/queues';
 
 // Schedule action types
 const scheduleActionSchema = z.discriminatedUnion('type', [
@@ -54,80 +56,8 @@ const updateScheduleSchema = z.object({
   isEnabled: z.boolean().optional(),
 });
 
-// Helper to validate cron expression
-function isValidCron(cron: string): boolean {
-  const parts = cron.split(' ');
-  if (parts.length !== 5) return false;
-  // Basic validation - actual parsing would use a library
-  return true;
-}
-
-// Helper to calculate next run time
 function calculateNextRun(timing: z.infer<typeof scheduleTimingSchema>): Date | null {
-  const now = new Date();
-
-  switch (timing.type) {
-    case 'daily': {
-      if (!timing.time) return null;
-      const [hours, minutes] = timing.time.split(':').map(Number);
-      const next = new Date(now);
-      next.setHours(hours, minutes, 0, 0);
-      if (next <= now) {
-        next.setDate(next.getDate() + 1);
-      }
-      return next;
-    }
-
-    case 'weekly': {
-      if (!timing.time || !timing.days || timing.days.length === 0) return null;
-      const [hours, minutes] = timing.time.split(':').map(Number);
-      const currentDay = now.getDay();
-
-      // Find next matching day
-      const sortedDays = [...timing.days].sort((a, b) => a - b);
-      let nextDay = sortedDays.find((d) => d > currentDay);
-
-      if (nextDay === undefined) {
-        // Wrap to next week
-        nextDay = sortedDays[0];
-      }
-
-      const daysUntil = nextDay >= currentDay
-        ? nextDay - currentDay
-        : 7 - currentDay + nextDay;
-
-      const next = new Date(now);
-      next.setDate(next.getDate() + daysUntil);
-      next.setHours(hours, minutes, 0, 0);
-
-      // If same day but time passed, go to next occurrence
-      if (daysUntil === 0 && next <= now) {
-        const nextDayIndex = sortedDays.indexOf(nextDay);
-        const followingDay = sortedDays[nextDayIndex + 1] ?? sortedDays[0];
-        const daysToAdd = followingDay > nextDay
-          ? followingDay - nextDay
-          : 7 - nextDay + followingDay;
-        next.setDate(next.getDate() + daysToAdd);
-      }
-
-      return next;
-    }
-
-    case 'once': {
-      if (!timing.date) return null;
-      const date = new Date(timing.date);
-      return date > now ? date : null;
-    }
-
-    case 'cron': {
-      // Cron parsing would require a library like cron-parser
-      // For now, return null (will be calculated by worker)
-      return null;
-    }
-
-    default:
-      return null;
-  }
+  return nextRunAt(timing);
 }
 
 export const schedulesRouter = router({
@@ -225,7 +155,7 @@ export const schedulesRouter = router({
 
       // Validate cron if provided
       if (input.timing.type === 'cron' && input.timing.cron) {
-        if (!isValidCron(input.timing.cron)) {
+        if (nextRunAt(input.timing) === null) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'Invalid cron expression',
@@ -262,7 +192,7 @@ export const schedulesRouter = router({
         }
       }
 
-      const nextRunAt = calculateNextRun(input.timing);
+      const computedNextRun = calculateNextRun(input.timing);
 
       const scheduleDoc = {
         householdId: auth.householdId,
@@ -271,7 +201,7 @@ export const schedulesRouter = router({
         timing: input.timing,
         action: input.action,
         isEnabled: input.isEnabled,
-        nextRunAt,
+        nextRunAt: computedNextRun,
         runCount: 0,
         isActive: true,
         createdAt: now,
@@ -291,7 +221,7 @@ export const schedulesRouter = router({
       return {
         _id: result.insertedId.toString(),
         msg: 'Schedule created successfully',
-        nextRunAt: nextRunAt?.toISOString(),
+        nextRunAt: computedNextRun?.toISOString(),
       };
     }),
 
@@ -409,11 +339,11 @@ export const schedulesRouter = router({
       }
 
       const newEnabled = !schedule.isEnabled;
-      const nextRunAt = newEnabled ? (calculateNextRun(schedule.timing) ?? undefined) : undefined;
+      const computedNextRun = newEnabled ? (calculateNextRun(schedule.timing) ?? undefined) : undefined;
 
       await schedules.updateOne(
         { _id: new ObjectId(scheduleId) },
-        { $set: { isEnabled: newEnabled, nextRunAt, updatedAt: new Date() } }
+        { $set: { isEnabled: newEnabled, nextRunAt: computedNextRun, updatedAt: new Date() } }
       );
 
       return {
@@ -445,39 +375,20 @@ export const schedulesRouter = router({
         });
       }
 
-      // Execute the action
-      const action = schedule.action;
-
-      if (action.type === 'device_control') {
-        const devices = await getDevicesCollection();
-        await devices.updateOne(
-          {
-            _id: new ObjectId(action.deviceId),
-            householdId: auth.householdId,
-            isActive: true,
-          },
-          {
-            $set: {
-              [`state.${action.command}`]: action.value,
-              updatedAt: new Date(),
-            },
-          }
+      try {
+        await getScheduleQueue().add(
+          'run',
+          { scheduleId, reason: 'manual', triggeredBy: auth.userId.toString() },
+          { removeOnComplete: 1000, removeOnFail: 1000 }
         );
-      } else if (action.type === 'scene') {
-        // Scene activation is handled separately
-        // TODO: Call scene activation logic
+      } catch (err) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to enqueue schedule: ${err instanceof Error ? err.message : 'unknown'}`,
+        });
       }
 
-      // Update run stats
-      await schedules.updateOne(
-        { _id: new ObjectId(scheduleId) },
-        {
-          $set: { lastRunAt: new Date() },
-          $inc: { runCount: 1 },
-        }
-      );
-
-      return { msg: 'Schedule executed' };
+      return { msg: 'Schedule queued for execution' };
     }),
 
   /**

@@ -6,6 +6,7 @@ import { withPermission } from '@/server/trpc/middleware/auth';
 import { getAutomationsCollection, getDevicesCollection } from '@/src/lib/db';
 import { auditHelpers } from '@/src/lib/db/audit';
 import { AuthContext } from '@/src/types';
+import { getAutomationQueue } from '@/server/jobs/queues';
 
 // Trigger types
 const triggerTypeEnum = z.enum([
@@ -411,17 +412,20 @@ export const automationRouter = router({
         });
       }
 
-      // TODO: Queue automation execution via BullMQ
-      // For now, just update execution count
-      await automations.updateOne(
-        { _id: new ObjectId(automationId) },
-        {
-          $set: { lastTriggeredAt: new Date() },
-          $inc: { executionCount: 1 },
-        }
-      );
+      try {
+        await getAutomationQueue().add(
+          'run',
+          { automationId, reason: 'manual', triggeredBy: auth.userId.toString() },
+          { removeOnComplete: 1000, removeOnFail: 1000 }
+        );
+      } catch (err) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to enqueue automation: ${err instanceof Error ? err.message : 'unknown'}`,
+        });
+      }
 
-      return { msg: 'Automation triggered' };
+      return { msg: 'Automation queued for execution' };
     }),
 
   /**

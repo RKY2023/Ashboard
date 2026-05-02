@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { ObjectId } from 'mongodb';
 import { router } from '@/server/trpc';
 import { householdProcedure, withPermission } from '@/server/trpc/middleware/auth';
-import { getDevicesCollection, getRoomsCollection } from '@/src/lib/db';
-import { auditHelpers } from '@/src/lib/db/audit';
+import { getDevicesCollection, getRoomsCollection, getAutomationsCollection } from '@/src/lib/db';
+import { auditHelpers, getResourceAuditLogs } from '@/src/lib/db/audit';
 import { AuthContext, DeviceType, DeviceProtocol, DeviceCapability } from '@/src/types';
 import { deviceHistoryRouter } from './history';
 
@@ -524,6 +524,61 @@ export const devicesRouter = router({
         msg: `Command sent to ${deviceIds.length} devices`,
         affected: deviceIds.length,
       };
+    }),
+
+  /**
+   * Recent control commands for a device — sourced from the audit log so
+   * the detail page can show "what happened to this device lately" without
+   * a separate command-history collection.
+   */
+  recentCommands: withPermission('devices:read')
+    .input(z.object({ deviceId: z.string(), limit: z.number().min(1).max(100).default(20) }))
+    .query(async ({ input, ctx }) => {
+      const auth = (ctx as unknown as { auth: AuthContext }).auth;
+      const devices = await getDevicesCollection();
+      const device = await devices.findOne({
+        _id: new ObjectId(input.deviceId),
+        householdId: auth.householdId,
+        isActive: true,
+      });
+      if (!device) throw new TRPCError({ code: 'NOT_FOUND', message: 'Device not found' });
+
+      const logs = await getResourceAuditLogs('device', new ObjectId(input.deviceId), input.limit);
+      return logs.map((l) => ({
+        _id: l._id.toString(),
+        action: l.action,
+        userId: l.userId.toString(),
+        details: l.details,
+        at: l.createdAt.toISOString(),
+      }));
+    }),
+
+  /**
+   * Automations that reference this device anywhere in their trigger,
+   * condition, or action lists.
+   */
+  automationsUsing: withPermission('devices:read')
+    .input(z.object({ deviceId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const auth = (ctx as unknown as { auth: AuthContext }).auth;
+      const automations = await getAutomationsCollection();
+      const matches = await automations
+        .find({
+          householdId: auth.householdId,
+          isActive: true,
+          $or: [
+            { 'triggers.deviceId': input.deviceId },
+            { 'conditions.deviceId': input.deviceId },
+            { 'actions.deviceId': input.deviceId },
+          ],
+        } as never)
+        .sort({ name: 1 })
+        .toArray();
+      return matches.map((a) => ({
+        _id: a._id.toString(),
+        name: a.name,
+        isEnabled: a.isEnabled,
+      }));
     }),
 
   // Sub-router for device history
