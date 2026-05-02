@@ -10,8 +10,17 @@ Multi-tenant authentication, RBAC, household management, and the App Router shel
 - `src/lib/auth/AuthProvider.tsx` — React context that loads the current user and exposes login/logout/refresh.
 - `src/lib/auth/permissions.ts` — `hasPermission`, `mergePermissions`, `PERMISSION_GROUPS`, label maps for UI.
 - `server/trpc/middleware/auth.ts` — `protectedProcedure`, `householdProcedure`, `adminProcedure`, `ownerProcedure`, and `withPermission(perm)` factory.
-- `server/trpc/routers/auth.ts` — login, register, refresh, logout.
+- `server/trpc/routers/auth.ts` — login, register, refresh, logout, **`requestPasswordReset`**, **`resetPassword`**, and the secret-gated **`checkEmailExists`** debug procedure.
 - `pages/api/panel.ts` — tRPC panel for browsing the API in dev.
+
+### Password reset
+- `src/app/(auth)/forgot-password/page.tsx` — request form → "check your email" success state.
+- `src/app/(auth)/reset-password/page.tsx` — reads `?token=` from URL, password + confirm form, redirects to `/login` on success.
+- `src/lib/email/index.ts` — Resend client + `sendPasswordResetEmail` (HTML + text bodies).
+- `password_reset_tokens` collection — stores SHA-256 hash of the raw token (so a DB leak doesn't yield a usable link), 30-min TTL via index, single-use (`usedAt`).
+- `requestPasswordReset` always returns the same generic response so callers cannot enumerate accounts; email-send failures are logged server-side, never surfaced. In non-production, the reset URL is logged to the server console as a fallback when Resend isn't configured.
+- `resetPassword` invalidates **all** sessions for the user after a successful reset, so any pre-reset stolen session is killed.
+- `auth.checkEmailExists` is a debug-only procedure gated by an `x-debug-token` header that must match `DEBUG_TOKEN`; without the env var or a matching header it 404s.
 
 ### Multi-tenancy
 - `src/types/index.ts` types: `Household`, `HouseholdMember`, `User`, `Session`, `UserRole`, `Permission` union, `ROLE_PERMISSIONS` defaults for `owner | admin | member | guest`.
@@ -35,7 +44,11 @@ Multi-tenant authentication, RBAC, household management, and the App Router shel
 - `src/lib/store/index.ts` — Zustand stores (UI prefs, optimistic device state).
 
 ### Rate limiting
-- `lib/rateLimit.ts` and `server/middleware/rateLimit.ts` use `rate-limiter-flexible` against Redis (or in-memory fallback) for login and tRPC mutations.
+- `lib/rateLimit.ts` and `server/middleware/rateLimit.ts` use `rate-limiter-flexible` against Redis (or in-memory fallback) for login and tRPC mutations. Password reset request and submit reuse `loginProcedure` (5 req / 15 min per IP).
+
+### Transactional email
+- Resend is the provider for password-reset emails. Configure with `RESEND_API_KEY` and `RESEND_FROM_EMAIL` (must use a domain verified in the Resend dashboard).
+- Notification channel adapters (`server/notifications/channels/stubs.ts`) for email/push/SMS are still stubs — only the auth flow uses Resend today. Wiring the dispatcher into the same module is a follow-up.
 
 ## Permission model
 
@@ -61,9 +74,10 @@ Routers gate every procedure with `withPermission('<resource>:<action>')`.
 ```
 src/lib/auth/{jwt,permissions,AuthProvider}.ts
 src/lib/db/{collections,indexes,audit}.ts
+src/lib/email/index.ts
 server/trpc/middleware/auth.ts
 server/trpc/routers/{auth,households,users}.ts
-src/app/(auth)/*
+src/app/(auth)/{login,register,forgot-password,reset-password}/page.tsx
 src/app/(dashboard)/layout.tsx
 src/components/layouts/{Sidebar,Header,DashboardLayout}.tsx
 ```

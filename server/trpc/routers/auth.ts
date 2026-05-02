@@ -458,6 +458,53 @@ export const authRouter = router({
     }),
 
   /**
+   * Debug: confirm whether an email exists in the users collection.
+   *
+   * Public enumeration is exactly what we avoid in requestPasswordReset, so
+   * this procedure is gated by a shared secret in `DEBUG_TOKEN`. Without the
+   * env var set, or without a matching `x-debug-token` header, it 404s as if
+   * the procedure didn't exist.
+   */
+  checkEmailExists: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email().toLowerCase().trim(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const expected = process.env.DEBUG_TOKEN;
+      const provided = ctx.req.headers['x-debug-token'];
+
+      if (!expected || provided !== expected) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Not found' });
+      }
+
+      const users = await getUsersCollection();
+      const user = await users.findOne(
+        { email: input.email },
+        {
+          projection: {
+            _id: 1,
+            email: 1,
+            name: 1,
+            isActive: 1,
+            isEmailVerified: 1,
+            createdAt: 1,
+          },
+        }
+      );
+
+      return {
+        exists: !!user,
+        email: user?.email ?? null,
+        name: user?.name ?? null,
+        isActive: user?.isActive ?? null,
+        isEmailVerified: user?.isEmailVerified ?? null,
+        createdAt: user?.createdAt?.toISOString() ?? null,
+      };
+    }),
+
+  /**
    * Refresh access token
    */
   refresh: publicProcedure

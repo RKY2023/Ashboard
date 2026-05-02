@@ -27,7 +27,7 @@ The full product spec lives in [`docs/ERP-Based Home Automation Software.md`](do
 
 These items are tracked in [`memory/project_erp_migration.md`](memory/project_erp_migration.md):
 
-- **Email / push / SMS channel adapters** — dispatcher routes correctly, providers stubbed
+- **Notification channel adapters** — in-app feed is real; email/push/SMS providers in `server/notifications/channels/stubs.ts` still log only. Transactional email (password reset) is real via Resend; the dispatcher just needs to call into the same module.
 - **`sun_position`** automation condition (needs household lat/lon + sun calc)
 
 ## Tech Stack
@@ -156,8 +156,16 @@ MQTT_PASSWORD=
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NODE_ENV=development
+
+# Resend (transactional email — password resets)
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=Ashboard <noreply@yourdomain.com>
+
+# Optional: gates auth.checkEmailExists debug procedure
+# DEBUG_TOKEN=some-shared-secret
 ```
+
+> **Don't set `NODE_ENV` yourself.** Next.js/Vercel manage it (`development` for `next dev`, `production` for builds). Setting it manually triggers a Vercel warning.
 
 Run the dev server:
 
@@ -222,6 +230,7 @@ The Socket.io server authenticates via the same JWT used for tRPC, scopes broadc
 
 - Password hashing with bcryptjs (cost 12)
 - JWT access + refresh tokens (jose)
+- **Password reset** — single-use SHA-256-hashed tokens with 30-min TTL, email link via Resend, generic response prevents account enumeration, successful reset invalidates all of that user's sessions
 - Multi-tenant isolation: every collection query is scoped by `householdId`
 - Rate limiting via `rate-limiter-flexible`
 - Permission middleware on every tRPC procedure

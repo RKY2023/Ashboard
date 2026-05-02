@@ -54,7 +54,7 @@ Last verified: 2026-04-29.
 
 ### Known gaps (priority order)
 
-1. **Email / push / SMS channel adapters** — dispatcher routes to them but the providers are stubs
+1. **Notification channel adapters (email / push / SMS)** — dispatcher routes correctly but the providers in `server/notifications/channels/stubs.ts` only log. Transactional email is now real (Resend, used by password reset); wire the dispatcher into the same `src/lib/email` module to close the email half.
 2. **`sun_position` automation condition** — needs household lat/lon + sun calc
 3. **Real Alexa/Google verification** — voice handler accepts the provider's POST shape but doesn't verify the provider's own signature yet (relies on the intent lookup as the access boundary)
 
