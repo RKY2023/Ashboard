@@ -188,6 +188,12 @@ export async function ensureIndexes(): Promise<void> {
     { key: { householdId: 1, categoryId: 1 } },
     { key: { householdId: 1, accountId: 1 } },
     { key: { recurringId: 1 }, sparse: true },
+    {
+      key: { householdId: 1, dedupeKey: 1 },
+      unique: true,
+      partialFilterExpression: { dedupeKey: { $type: 'string' } },
+      name: 'household_dedupeKey_unique',
+    },
   ]);
 
   // Budgets indexes
@@ -226,6 +232,51 @@ export async function ensureIndexes(): Promise<void> {
   await db.collection(COLLECTIONS.integrations).createIndexes([
     { key: { householdId: 1 } },
     { key: { householdId: 1, type: 1 } },
+  ]);
+
+  // Expense sync collections
+  await db.collection(COLLECTIONS.integrationAccounts).createIndexes([
+    { key: { householdId: 1, isActive: 1 } },
+    { key: { householdId: 1, provider: 1 } },
+    { key: { userId: 1 } },
+  ]);
+
+  await db.collection(COLLECTIONS.expenseAccountAliases).createIndexes([
+    {
+      key: { householdId: 1, last4: 1, issuer: 1 },
+      unique: true,
+      name: 'household_last4_issuer_unique',
+    },
+    { key: { householdId: 1, accountId: 1 } },
+  ]);
+
+  await db.collection(COLLECTIONS.expenseRules).createIndexes([
+    { key: { householdId: 1, isActive: 1, priority: -1 } },
+  ]);
+
+  await db.collection(COLLECTIONS.expenseSyncFailures).createIndexes([
+    { key: { householdId: 1, createdAt: -1 } },
+    { key: { householdId: 1, kind: 1 } },
+    { key: { householdId: 1, resolvedAt: 1 } },
+  ]);
+
+  // Account Aggregator
+  await db.collection(COLLECTIONS.aaConsents).createIndexes([
+    { key: { householdId: 1, status: 1 } },
+    { key: { consentHandle: 1 }, unique: true },
+    {
+      key: { consentId: 1 },
+      unique: true,
+      partialFilterExpression: { consentId: { $type: 'string' } },
+      name: 'aa_consentId_unique',
+    },
+    { key: { integrationAccountId: 1 } },
+  ]);
+
+  await db.collection(COLLECTIONS.aaSessions).createIndexes([
+    { key: { householdId: 1, requestedAt: -1 } },
+    { key: { sessionId: 1 }, unique: true },
+    { key: { consentDocId: 1 } },
   ]);
 
   console.log('Database indexes ensured');

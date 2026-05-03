@@ -30,6 +30,12 @@ import {
   FinanceCategory,
   Account,
   RecurringPayment,
+  IntegrationAccount,
+  ExpenseAccountAlias,
+  ExpenseRule,
+  ExpenseSyncFailure,
+  AaConsent,
+  AaSession,
   Notification,
   Integration,
   Camera,
@@ -88,6 +94,16 @@ export const COLLECTIONS = {
   accounts: 'accounts',
   recurringPayments: 'recurring_payments',
   financialGoals: 'financial_goals',
+
+  // Expense sync (email/SMS/statement ingestion)
+  integrationAccounts: 'integration_accounts',
+  expenseAccountAliases: 'expense_account_aliases',
+  expenseRules: 'expense_rules',
+  expenseSyncFailures: 'expense_sync_failures',
+
+  // Account Aggregator (AA)
+  aaConsents: 'aa_consents',
+  aaSessions: 'aa_sessions',
 
   // System
   integrations: 'integrations',
@@ -259,6 +275,38 @@ export async function getAccountsCollection(): Promise<Collection<Account>> {
 export async function getRecurringPaymentsCollection(): Promise<Collection<RecurringPayment>> {
   const database = await getDb();
   return database.collection<RecurringPayment>(COLLECTIONS.recurringPayments);
+}
+
+// Expense sync collections
+export async function getIntegrationAccountsCollection(): Promise<Collection<IntegrationAccount>> {
+  const database = await getDb();
+  return database.collection<IntegrationAccount>(COLLECTIONS.integrationAccounts);
+}
+
+export async function getExpenseAccountAliasesCollection(): Promise<Collection<ExpenseAccountAlias>> {
+  const database = await getDb();
+  return database.collection<ExpenseAccountAlias>(COLLECTIONS.expenseAccountAliases);
+}
+
+export async function getExpenseRulesCollection(): Promise<Collection<ExpenseRule>> {
+  const database = await getDb();
+  return database.collection<ExpenseRule>(COLLECTIONS.expenseRules);
+}
+
+export async function getExpenseSyncFailuresCollection(): Promise<Collection<ExpenseSyncFailure>> {
+  const database = await getDb();
+  return database.collection<ExpenseSyncFailure>(COLLECTIONS.expenseSyncFailures);
+}
+
+// Account Aggregator collections
+export async function getAaConsentsCollection(): Promise<Collection<AaConsent>> {
+  const database = await getDb();
+  return database.collection<AaConsent>(COLLECTIONS.aaConsents);
+}
+
+export async function getAaSessionsCollection(): Promise<Collection<AaSession>> {
+  const database = await getDb();
+  return database.collection<AaSession>(COLLECTIONS.aaSessions);
 }
 
 // System collections

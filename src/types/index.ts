@@ -577,6 +577,34 @@ export interface MealPlanEntry {
 }
 
 // Finance types
+export type TransactionSource =
+  | 'manual'
+  | 'email'
+  | 'sms'
+  | 'statement'
+  | 'aa'
+  | 'merchant';
+
+export type CategorySource = 'rule' | 'dict' | 'llm' | 'manual';
+
+export interface TransactionLineItem {
+  name: string;
+  quantity?: number;
+  unit?: string;
+  price?: number;
+  groceryItemId?: ObjectId;
+}
+
+export interface TransactionMetadata {
+  lineItems?: TransactionLineItem[];
+  categorySource?: CategorySource;
+  parserId?: string;
+  rawHash?: string;
+  origCurrency?: string;
+  origAmount?: number;
+  refundOf?: string;
+}
+
 export interface Transaction extends BaseDocument {
   householdId: ObjectId;
   type: 'income' | 'expense';
@@ -592,6 +620,9 @@ export interface Transaction extends BaseDocument {
   tags: string[];
   receiptUrl?: string;
   groceryItemIds?: ObjectId[];
+  source?: TransactionSource;
+  dedupeKey?: string;
+  metadata?: TransactionMetadata;
 }
 
 export interface Budget extends BaseDocument {
@@ -643,6 +674,125 @@ export interface RecurringPayment extends BaseDocument {
   endDate?: Date;
   nextDueDate: Date;
   isActive: boolean;
+}
+
+// Expense sync (email/SMS/statement ingestion) types
+export type IntegrationAccountProvider =
+  | 'gmail'
+  | 'sms-webhook'
+  | 'csv'
+  | 'aa-tsp';
+
+export interface IntegrationAccount extends BaseDocument {
+  householdId: ObjectId;
+  userId: ObjectId;
+  provider: IntegrationAccountProvider;
+  label?: string;
+  // Provider-specific encrypted credentials. For gmail: { accessToken, refreshToken, scope, expiry }.
+  // For sms-webhook: { secretHash } (the bearer token is shown to the user once at create-time).
+  credentials: Record<string, unknown>;
+  scopes: string[];
+  enabledSourceIds: string[]; // e.g. ['hdfc-debit', 'icici-debit']
+  lastSyncAt?: Date;
+  lastSyncCursor?: string; // gmail historyId or epoch seconds
+  isActive: boolean;
+}
+
+export interface ExpenseAccountAlias extends BaseDocument {
+  householdId: ObjectId;
+  last4: string;
+  issuer?: string; // 'hdfc', 'icici', ...
+  accountId: ObjectId;
+}
+
+export interface ExpenseRule extends BaseDocument {
+  householdId: ObjectId;
+  payeeRegex: string;
+  categoryId: ObjectId;
+  priority: number;
+  isActive: boolean;
+}
+
+export type ExpenseSyncFailureKind =
+  | 'parse'
+  | 'dedupe'
+  | 'categorise'
+  | 'account-resolve';
+
+export interface ExpenseSyncFailure extends BaseDocument {
+  householdId: ObjectId;
+  integrationAccountId?: ObjectId;
+  parserId?: string;
+  kind: ExpenseSyncFailureKind;
+  // Redacted body — never store full account numbers or raw amounts when possible.
+  redactedBody?: string;
+  reason: string;
+  resolvedAt?: Date;
+}
+
+// Account Aggregator (AA) types
+export type AaTspProvider = 'setu' | 'finvu' | 'onemoney' | 'mock';
+
+export type AaConsentStatus =
+  | 'PENDING'
+  | 'ACTIVE'
+  | 'PAUSED'
+  | 'REVOKED'
+  | 'REJECTED'
+  | 'EXPIRED'
+  | 'FAILED';
+
+export type AaSessionStatus =
+  | 'REQUESTED'
+  | 'PENDING'
+  | 'READY'
+  | 'PARTIAL'
+  | 'FAILED';
+
+export type AaFiType =
+  | 'DEPOSIT'
+  | 'TERM_DEPOSIT'
+  | 'RECURRING_DEPOSIT'
+  | 'CREDIT_CARD'
+  | 'MUTUAL_FUNDS'
+  | 'INSURANCE_POLICIES';
+
+export interface AaConsentFrequency {
+  unit: 'HOUR' | 'DAY' | 'MONTH' | 'YEAR';
+  value: number;
+}
+
+export interface AaConsent extends BaseDocument {
+  householdId: ObjectId;
+  userId: ObjectId;
+  integrationAccountId: ObjectId;
+  tspProvider: AaTspProvider;
+  consentHandle: string;
+  consentId?: string;
+  status: AaConsentStatus;
+  fiTypes: AaFiType[];
+  customerMobile: string;
+  fromDate: Date;
+  toDate: Date;
+  frequency: AaConsentFrequency;
+  consentExpiresAt?: Date;
+  redirectUrl?: string;
+  lastStatusAt?: Date;
+}
+
+export interface AaSession extends BaseDocument {
+  householdId: ObjectId;
+  consentDocId: ObjectId;
+  tspProvider: AaTspProvider;
+  sessionId: string;
+  status: AaSessionStatus;
+  fromDate: Date;
+  toDate: Date;
+  requestedAt: Date;
+  dataReceivedAt?: Date;
+  transactionsCount: number;
+  accountsCount: number;
+  errorMessage?: string;
 }
 
 // Notification types

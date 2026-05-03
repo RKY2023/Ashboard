@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test \"__tests__/**/*.test.ts\"",
     "worker": "tsx --env-file=.env.local server/jobs/worker.ts"
   },
   "dependencies": {
