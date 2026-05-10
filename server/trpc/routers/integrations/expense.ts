@@ -6,6 +6,11 @@ import { AuthContext } from '@/src/types';
 import { runParsers } from '@/src/lib/expense/parsers';
 import { ingestParsed } from '@/src/lib/expense/ingest';
 import { parseSbiCsv, sbiCsvRowToParsed } from '@/src/lib/expense/csv/sbi';
+import {
+  parseSbiXlsx,
+  sbiXlsxRowToParsed,
+  SbiXlsxError,
+} from '@/src/lib/expense/xlsx/sbi-xlsx';
 import { getExpenseSyncFailuresCollection } from '@/src/lib/db';
 import { ObjectId } from 'mongodb';
 
@@ -19,9 +24,12 @@ const ingestRawSchema = z.object({
 });
 
 const importStatementSchema = z.object({
-  format: z.enum(['sbi-csv']),
-  // Raw file contents — UI uploads as text, max ~5MB statement.
-  content: z.string().min(1).max(5 * 1024 * 1024),
+  format: z.enum(['sbi-csv', 'sbi-xlsx']),
+  // For 'sbi-csv' this is plain text. For 'sbi-xlsx' it is the file's bytes
+  // base64-encoded. Bumped to 8 MB to fit a year of binary statement.
+  content: z.string().min(1).max(8 * 1024 * 1024),
+  // Required for encrypted xlsx exports (SBI's default).
+  password: z.string().min(1).max(256).optional(),
   accountLast4Override: z.string().regex(/^\d{4}$/).optional(),
 });
 
@@ -84,7 +92,25 @@ export const expenseRouter = router({
     .mutation(async ({ input, ctx }) => {
       const auth = (ctx as unknown as { auth: AuthContext }).auth;
 
-      const parsed = parseSbiCsv(input.content);
+      let parsed;
+      try {
+        if (input.format === 'sbi-csv') {
+          parsed = parseSbiCsv(input.content);
+        } else {
+          const buffer = Buffer.from(input.content, 'base64');
+          parsed = await parseSbiXlsx(buffer, { password: input.password });
+        }
+      } catch (err) {
+        if (err instanceof SbiXlsxError) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: err.message,
+            cause: err.code,
+          });
+        }
+        throw err;
+      }
+
       const last4 = input.accountLast4Override ?? parsed.accountLast4;
       if (!last4) {
         throw new TRPCError({
@@ -94,13 +120,16 @@ export const expenseRouter = router({
         });
       }
 
+      const toParsed =
+        input.format === 'sbi-csv' ? sbiCsvRowToParsed : sbiXlsxRowToParsed;
+
       let created = 0;
       let updated = 0;
       let duplicate = 0;
       let failed = 0;
 
       for (const row of parsed.rows) {
-        const ptx = sbiCsvRowToParsed(row, last4);
+        const ptx = toParsed(row, last4);
         const result = await ingestParsed(ptx, {
           householdId: auth.householdId!,
         });

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { trpc } from '@/src/app/providers';
 import {
   Plus,
@@ -9,6 +10,7 @@ import {
   Wallet,
   DollarSign,
   Loader2,
+  Upload,
   X,
   ShoppingCart,
 } from 'lucide-react';
@@ -60,13 +62,22 @@ export default function FinancePage() {
             Track income, expenses, budgets, and grocery spending
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateTx(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Transaction
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/dashboard/finance/import"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent transition-colors"
+          >
+            <Upload className="w-4 h-4" />
+            Import statement
+          </Link>
+          <button
+            onClick={() => setShowCreateTx(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Transaction
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
